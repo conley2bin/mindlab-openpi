@@ -1,0 +1,4 @@
+interface:
+  display_name: "Write Daily Report"
+  short_description: "Draft daily reports from committed repo facts."
+  default_prompt: "Use $write-daily-report to draft today's professional and plain-language daily reports from committed repository facts."

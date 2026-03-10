@@ -1,0 +1,12 @@
+[submodule "src/openpi"]
+	path = src/openpi
+	url = git@github.com:conley2bin/openpi.git
+[submodule "src/mint"]
+	path = src/mint
+	url = git@github.com:MindLab-Research/mint.git
+[submodule "src/tinker"]
+	path = src/tinker
+	url = https://github.com/thinking-machines-lab/tinker.git
+[submodule "src/mindlab-toolkit"]
+	path = src/mindlab-toolkit
+	url = git@github.com:conley2bin/mindlab-toolkit.git
