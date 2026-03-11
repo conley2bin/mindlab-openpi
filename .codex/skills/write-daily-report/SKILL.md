@@ -1,6 +1,6 @@
 ---
 name: write-daily-report
-description: Use when writing a daily work report from repository evidence, especially when the report must be based only on same-day committed changes plus same-day updates in workspace/docs/targets or workspace/docs/plans, and when both a professional report and a plain-language companion report are required.
+description: Use when writing a daily work report from repository evidence, especially when the report must be based only on same-day committed changes plus same-day committed updates in docs/progress, docs/targets, or docs/plans, and when both a professional report and a plain-language companion report are required.
 ---
 
 # Write Daily Report
@@ -8,8 +8,8 @@ description: Use when writing a daily work report from repository evidence, espe
 ## Overview
 
 Use this skill to write two daily reports from committed repository facts:
-- `workspace/docs/日报/YYYY-MM-DD.md`
-- `workspace/docs/日报/YYYY-MM-DD-通俗版.md`
+- `docs/daily-report/YYYY-MM-DD.md`
+- `docs/daily-report/YYYY-MM-DD-通俗版.md`
 
 The collector script defines the fact boundary. The model only groups facts into themes, runs the smallest relevant verification commands, and writes the two reports.
 
@@ -30,28 +30,29 @@ python3 .codex/skills/write-daily-report/scripts/collect_daily_report_facts.py \
 
 3. Read the JSON output and treat it as the only fact source for prose.
    - `commits`: same-day commits by author date
-   - `progress_docs`: same-day committed updates under `workspace/docs/targets/` and `workspace/docs/plans/`
-   - `facts`: prose-ready facts from target docs plus commit subjects
-   - `verification_commands`: candidate commands extracted from plan docs and target docs
+   - `progress_docs`: same-day committed updates under `docs/progress/`, `docs/targets/`, and `docs/plans/`
+   - `facts`: prose-ready facts from `docs/progress/`, selected current-state `docs/targets/subtarget-*.md` content, plus commit subjects
+   - `verification_commands`: candidate commands extracted from progress docs, plan docs, and target docs
 
 4. Build 2 to 4 work themes.
    - Group by work intent, not by repository name.
    - Merge facts that describe one capability chain.
-   - Prefer target-doc facts over raw commit subjects when both say the same thing.
+   - Prefer progress-doc facts over target-doc facts, and prefer target-doc facts over raw commit subjects when both say the same thing.
 
 5. Select the smallest relevant verification commands.
    - Run 1 to 2 commands per theme when possible.
    - Prefer commands that directly test the capability described by that theme.
    - Do not run full test suites unless the collector found no narrower command.
 
-6. Write both markdown files in `workspace/docs/日报/`.
+6. Write both markdown files in `docs/daily-report/`.
 
 ## Fact Boundary
 
 Use only:
 - same-day committed changes
-- same-day committed updates in `workspace/docs/targets/`
-- same-day committed updates in `workspace/docs/plans/`
+- same-day committed updates in `docs/progress/`
+- same-day committed updates in `docs/targets/`
+- same-day committed updates in `docs/plans/`
 - fresh output from the selected verification commands
 
 Do not use:
@@ -60,13 +61,13 @@ Do not use:
 - unstated intent
 - manual guesses about why something happened
 
-Plan docs are command sources, not prose fact sources. Use them to find verification commands. Do not turn design alternatives or task lists into report sentences.
+Progress docs are the primary prose fact source. Target docs can supply same-day architecture facts when the collector marks them as current-state content. Plan docs are command sources, not prose fact sources. Do not turn design alternatives or task lists into report sentences.
 
 ## Writing Rules
 
 ### Professional Report
 
-Write `workspace/docs/日报/YYYY-MM-DD.md`.
+Write `docs/daily-report/YYYY-MM-DD.md`.
 
 Rules:
 - Title: `# YYYY-MM-DD 工作日报`
@@ -86,7 +87,7 @@ Do not put code snippets, file paths, script paths, or API names into prose.
 
 ### Plain-Language Report
 
-Write `workspace/docs/日报/YYYY-MM-DD-通俗版.md`.
+Write `docs/daily-report/YYYY-MM-DD-通俗版.md`.
 
 Rules:
 - Title: `# YYYY-MM-DD 工作日报（通俗版）`
@@ -133,8 +134,9 @@ Before saving the files, check:
 
 `scripts/collect_daily_report_facts.py` already enforces these boundaries:
 - filters commits by author date
-- excludes deleted progress-doc paths
+- excludes deleted progress-doc paths and `README.md` directory guides
+- treats progress docs as the primary prose fact source
 - treats plan docs as verification-command sources
-- keeps target-doc state sentences and drops static guidance lines
+- only keeps selected current-state subtarget sentences from `docs/targets/`
 
 If the collector output looks wrong, fix the collector or its tests first. Do not paper over bad facts in prose.

@@ -11,8 +11,9 @@ from datetime import date
 
 
 PROGRESS_DOC_PREFIXES = (
-    "workspace/docs/targets/",
-    "workspace/docs/plans/",
+    "docs/targets/",
+    "docs/plans/",
+    "docs/progress/",
 )
 
 COMMAND_PREFIXES = (
@@ -94,13 +95,17 @@ def _collect_commit_paths(repo_root: pathlib.Path, commit_hash: str) -> list[str
     return [path for path in paths if path]
 
 
+def _is_reportable_doc_path(path: str) -> bool:
+    return path.startswith(PROGRESS_DOC_PREFIXES) and pathlib.Path(path).name != "README.md"
+
+
 def _collect_progress_docs(commits: list[dict[str, object]]) -> tuple[list[str], dict[str, str]]:
     doc_to_commit: dict[str, str] = {}
     ordered_docs: list[str] = []
     for commit in commits:
         commit_hash = str(commit["hash"])
         for path in sorted(str(path) for path in commit["touched_paths"]):
-            if not path.startswith(PROGRESS_DOC_PREFIXES):
+            if not _is_reportable_doc_path(path):
                 continue
             if path not in doc_to_commit:
                 ordered_docs.append(path)
@@ -116,12 +121,12 @@ def _extract_commands_from_text(text: str, source_path: str) -> list[str]:
     commands: list[str] = []
     for line in text.splitlines():
         stripped = line.strip()
-        if source_path.startswith("workspace/docs/plans/") and stripped.startswith("Run:"):
+        if stripped.startswith("Run:"):
             command = _extract_first_command(stripped)
             if command is not None:
                 commands.append(command)
             continue
-        if source_path.startswith("workspace/docs/targets/"):
+        if source_path.startswith("docs/targets/"):
             command = _extract_first_command(stripped)
             if command is not None:
                 commands.append(command)
@@ -146,16 +151,20 @@ def _looks_like_command(candidate: str) -> bool:
     return any(token in candidate for token in COMMAND_TOKENS)
 
 
-def _extract_facts_from_progress_doc(
+def _extract_facts_from_doc(
     path: str,
     text: str,
     verification_commands: list[str],
 ) -> list[dict[str, object]]:
     theme_hint = _extract_theme_hint(path, text)
     facts: list[dict[str, object]] = []
+    current_section: str | None = None
     for raw_line in text.splitlines():
         stripped = raw_line.strip()
         if not stripped:
+            continue
+        if stripped.startswith("## "):
+            current_section = stripped[3:].strip()
             continue
         if stripped.startswith(("#", "|")):
             continue
@@ -166,6 +175,10 @@ def _extract_facts_from_progress_doc(
         elif re.match(r"^\d+\.\s+", stripped):
             statement = re.sub(r"^\d+\.\s+", "", stripped)
         else:
+            continue
+        if statement.startswith("Status:"):
+            continue
+        if not _should_include_fact_section(path, current_section):
             continue
         status = _classify_status(statement)
         if status == "note":
@@ -189,6 +202,16 @@ def _extract_theme_hint(path: str, text: str) -> str:
         if stripped.startswith("# "):
             return stripped[2:].strip()
     return pathlib.Path(path).stem
+
+
+def _should_include_fact_section(path: str, current_section: str | None) -> bool:
+    if path.startswith("docs/progress/"):
+        return True
+    if not path.startswith("docs/targets/subtarget-"):
+        return False
+    if current_section is None:
+        return False
+    return current_section.startswith("Current ")
 
 
 def _classify_status(statement: str) -> str:
@@ -251,6 +274,12 @@ def _dedupe_preserve_order(items: list[str]) -> list[str]:
     return list(OrderedDict.fromkeys(items))
 
 
+def _is_fact_source_path(path: str) -> bool:
+    if path.startswith("docs/progress/"):
+        return True
+    return path.startswith("docs/targets/subtarget-")
+
+
 def collect_daily_report_facts(repo_root: pathlib.Path, target_date: str) -> dict[str, object]:
     commits = _collect_same_day_commits(repo_root, target_date)
     progress_docs, doc_to_commit = _collect_progress_docs(commits)
@@ -269,10 +298,10 @@ def collect_daily_report_facts(repo_root: pathlib.Path, target_date: str) -> dic
 
     facts: list[dict[str, object]] = []
     for path in progress_docs:
-        if not path.startswith("workspace/docs/targets/"):
+        if not _is_fact_source_path(path):
             continue
         path_commands = _extract_commands_from_text(doc_texts[path], path)
-        facts.extend(_extract_facts_from_progress_doc(path, doc_texts[path], path_commands or verification_commands))
+        facts.extend(_extract_facts_from_doc(path, doc_texts[path], path_commands or verification_commands))
     facts.extend(_extract_commit_facts(commits))
 
     return {
