@@ -1,6 +1,6 @@
 # OpenPI Validation Baseline
 
-Baseline date: 2026-03-11
+Baseline date: 2026-03-12
 
 ## Current Hard Gates
 
@@ -10,6 +10,10 @@ Baseline date: 2026-03-11
 cd src/openpi && uv run pytest src/openpi/models/model_test.py -q
 cd src/openpi && uv run pytest src/openpi/models/lora_test.py -q
 cd src/openpi && uv run pytest scripts/train_test.py -q
+cd src/openpi && uv run pytest src/openpi/integration/runtime_test.py -q
+cd src/openpi && uv run pytest src/openpi/integration/artifacts_test.py -q
+cd src/openpi && uv run pytest src/openpi/integration/training_test.py -q
+cd src/openpi && uv run pytest scripts/serve_policy_test.py -q
 ```
 
 What these gates cover:
@@ -17,13 +21,15 @@ What these gates cover:
 - local model creation and loss/sample behavior
 - local LoRA model surface
 - local JAX training smoke with `debug` config and resume path
+- deterministic inference facade contract
+- deterministic artifact path and norm stats contract
+- deterministic training facade contract
+- websocket serving script adapter contract
 
 What these gates do not cover:
 
-- Mint-facing integration facade
 - real checkpoint inference
 - cross-repo contract
-
 ### `src/mint`
 
 ```bash
@@ -82,7 +88,7 @@ These are useful, but they are not hard gates for the first implementation pass.
 
 | Layer | Current state |
 | --- | --- |
-| OpenPI integration facade tests | missing |
+| OpenPI integration facade tests | `src/openpi/src/openpi/integration/runtime_test.py`, `src/openpi/src/openpi/integration/artifacts_test.py`, `src/openpi/src/openpi/integration/training_test.py` |
 | Mint OpenPI route and schema tests | missing |
 | Mint to OpenPI runtime bridge tests | missing |
 | Toolkit `mint.openpi.*` namespace tests | missing |
@@ -94,7 +100,7 @@ These are useful, but they are not hard gates for the first implementation pass.
 
 | Area | Positive signal | Negative signal |
 | --- | --- | --- |
-| OpenPI | local runtime/training tests still pass after facade extraction | script adapters stop working or local training smoke breaks |
+| OpenPI | deterministic runtime/artifact tests and LoRA tests still pass after facade extraction | script adapters stop working or local training smoke breaks |
 | Mint | new OpenPI plane works without touching token-only types | old `/api/v1` path changes semantics or old tests need relaxed assertions |
 | Toolkit | `mint.openpi.*` imports and behaves as designed | top-level `mint.*` re-export or existing patch behavior changes |
 | Cross-repo | deterministic fake-runtime loop works end-to-end | failure cannot be localized to runtime vs service vs SDK |
@@ -109,6 +115,11 @@ When a future cross-repo test fails, the write-up must classify it into one of t
 - environment or external asset failure
 
 Do not write “OpenPI integration failed” without this classification.
+
+## Current Environment-Specific Failures
+
+- `src/openpi/src/openpi/models/model_test.py` 当前在本机 GPU 上失败于模型初始化阶段的 `RESOURCE_EXHAUSTED`。堆栈停在 `pi0` / `pi0_fast` model create，不经过 `openpi.integration.*`。
+- 并发运行 `train_test.py` 与其他 JAX tests 会污染设备初始化状态，可能把原本可通过的 `lora_test.py` 拖成 CUDA backend init failure。当前 `src/openpi` 验证应串行执行。
 
 ## First Deterministic Closed-Loop Rule
 
