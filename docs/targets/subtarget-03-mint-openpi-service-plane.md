@@ -25,6 +25,7 @@
 - `src/mint/tinker_server/app.py` 负责服务装配与生命周期入口，OpenPI 接入最终一定会影响服务注册层，而不只是单个 route 文件。
 - `src/mint/tinker_server/routes` 当前按 service / sampling / training / futures / weights 分面组织，说明现有 API 语义已经围绕 Tinker-compatible 路径固化。
 - `src/mint/tinker_server/backend` 当前集中会话、队列、容量、训练、LoRA 与模型注册逻辑，OpenPI 接入不能无约束地继续向这些通用文件平铺私有逻辑。
+- `src/mint/tinker_server/openpi/{routes,models,backend}.py` 现在已经形成独立 OpenPI service family，说明 OpenPI service plane 的目录边界已经真实存在。
 - `src/mint/tinker_server/gateway.py`、`src/mint/tinker_server/checkpoints.py`、`src/mint/tinker_server/config.py` 与 `src/mint/tinker_server/models/types.py` 共同构成服务端协议、工件与配置边界。
 - `src/mint/tinker_server/models/types.py` 当前核心是 token / sampling / training request-response 语义，并不对应 OpenPI 的 observation / action / multimodal 调用模型。
 - `src/mint/tests` 与 `src/mint/configs` 已经承载大量稳定性约束，后续 OpenPI 服务面必须有清晰的测试与配置归属。
@@ -91,3 +92,4 @@
 - OpenPI 子系统出现故障时，隔离策略必须优先保护现有 Mint 主路径，而不是让两套路径一起退化。
 - 如果 Mint 需要桥接现有平台能力与 OpenPI 多模态输入，桥接层应位于 OpenPI 专用服务面内部，而不是回写污染现有 Tinker-compatible schema 树。
 - 如果 OpenPI policy reset、episode 边界或 runtime bootstrapping 在服务侧需要显式控制，这些控制面也应属于 OpenPI-specific service family，而不是挤入现有 sampling session 语义。
+- 如果未来需要做 capability/version 协商、额外 status signal 或 artifact transport 扩展，应优先落在 `tinker_server/openpi` 专用 route/model family，而不是借现有 token-only route family 偷渡新语义。

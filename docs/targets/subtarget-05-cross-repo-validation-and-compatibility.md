@@ -34,6 +34,8 @@ OpenPI 接入不是单仓改动，而是三仓联动：
 - `src/mint/tests` 已经存在大量针对路由语义、checkpoint 行为、gateway 代理、健康检查与调度边界的回归测试。
 - `src/openpi` 当前测试分散在 `src/openpi/src/openpi/**/*_test.py`、`src/openpi/scripts/train_test.py` 与 `src/openpi/packages/openpi-client/src/openpi_client/*_test.py`，说明 runtime、脚本与客户端语义目前并未被单一路径统一约束。
 - `src/mindlab-toolkit/tests/test_namespace_contract.py` 与 `test_mint_polling_patch.py` 说明 Toolkit 最脆弱的点是外部契约漂移，而不是内部算法正确性。
+- `docs/progress/openpi-{compatibility-matrix,validation-baseline,integration-baseline,contract-glossary}.md` 现在已经形成 current-truth / gate / ownership 文档面，说明跨仓验证不再只是目标，而是已落地的维护对象。
+- `src/mint/tests/test_openpi_cross_repo_closed_loop.py` 现在已经提供 fake-runtime deterministic closed loop，说明跨仓最小闭环已有 concrete harness，而不是停留在设计阶段。
 
 ## Planned Direction
 
@@ -85,3 +87,4 @@ OpenPI 接入不是单仓改动，而是三仓联动：
 - 验证体系应覆盖“OpenPI 新能力可用”和“旧能力未受影响”这两类信号。
 - 未来如果需要纳入 RL 或更复杂训练流程，也应优先扩展本子目标下的兼容机制，而不是跳过它。
 - 如果某次变更只能通过放宽现有 Tinker-compatible 测试断言才能通过，应先把它视为路径污染风险，而不是默认接受的新兼容行为。
+- 后续若要扩跨仓 capability/version 协商或 live-service smoke，应先把它明确纳入 deterministic lane 之外的新验证层，不要倒退成“只有手工联调能发现兼容问题”。

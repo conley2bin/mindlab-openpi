@@ -30,6 +30,7 @@
 
 - `src/openpi/src/openpi/models` 与 `src/openpi/src/openpi/policies` 承载 `pi0` 家族、LoRA 与 policy 语义。
 - `src/openpi/src/openpi/training` 已经持有训练配置、checkpoint、数据加载与训练辅助逻辑。
+- `src/openpi/src/openpi/integration/{runtime,artifacts,training}.py` 现在已经形成 Mint-facing library facade，说明 runtime surface 不再只是目标状态，而是当前真实边界。
 - `src/openpi/src/openpi/serving/websocket_policy_server.py` 代表当前对外 serving 入口仍偏向独立 server 进程。
 - `src/openpi/packages/openpi-client` 说明仓库内部已经存在客户端与 runtime 相关封装，后续必须先判断复用边界，不能在 Mint 侧再次平行发明一套客户端语义。
 - `src/openpi/packages/openpi-client/src/openpi_client/base_policy.py` 与 websocket client/server 当前以 `obs -> action` 为核心接口，而不是 token continuation。
@@ -84,6 +85,7 @@
 
 - Mint 侧如果需要新增 OpenPI 特定行为，应优先通过 `src/openpi` 新增或整理运行时接口，而不是在 `src/mint` 里复制模型细节。
 - OpenPI 的公开运行时接口应尽量围绕语义对象设计，而不是围绕单个脚本参数设计。
+- 后续如果需要扩 inference、artifact 或 training contract，应优先扩 `src/openpi/src/openpi/integration/*` facade，而不是让 Mint 直接追逐更底层的 `models`、`policies` 或脚本 helper。
 - 如果后续仍保留 websocket server 路径，它应被视为 runtime surface 的一种适配器或调试入口，而不是 Mint 对外 API 设计的依据。
 - 推理先行是合理路径，但运行时接口不能只为单次推理做窄化设计，必须为后续监督式适配保留稳定扩展位。
 - OpenPI 内部错误哪些由 runtime 直接暴露、哪些由上层服务面转换，必须作为接口契约的一部分明确下来，不能留给服务端各自猜测。
