@@ -2,7 +2,7 @@
 
 ## Current Status
 
-- Status: drafted
+- Status: completed
 
 ## Objective
 

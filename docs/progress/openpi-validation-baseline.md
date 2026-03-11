@@ -99,6 +99,25 @@ What these gates do not cover:
 - real FutureStore polling against a running Mint service
 - deterministic cross-repo closed loop
 
+### Cross-repo deterministic lane
+
+```bash
+cd src/mint && .venv/bin/pytest \
+  tests/test_openpi_cross_repo_closed_loop.py -q
+```
+
+What this gate covers:
+
+- Toolkit SDK to Mint OpenPI service to fake OpenPI runtime closed loop
+- structured observation/action payload across repo boundaries
+- lifecycle signal propagation via `reset_before_infer`
+
+What this gate does not cover:
+
+- real checkpoint model loading
+- live deployment networking
+- artifact or training end-to-end round-trips
+
 ## Current Weak Lanes
 
 These are useful, but they are not hard gates for the first implementation pass.
@@ -122,7 +141,8 @@ These are useful, but they are not hard gates for the first implementation pass.
 | Toolkit `mint.openpi.*` namespace tests | `src/mindlab-toolkit/tests/test_openpi_namespace_contract.py` |
 | Toolkit OpenPI SDK contract tests | `src/mindlab-toolkit/tests/test_openpi_sdk_contract.py` |
 | Toolkit to Mint live service smoke | missing |
-| deterministic cross-repo closed loop | missing |
+| deterministic cross-repo closed loop | `src/mint/tests/test_openpi_cross_repo_closed_loop.py` |
+| cross-repo live-service smoke | missing |
 | release matrix by repo/version combination | missing |
 
 ## Positive And Negative Signals To Preserve
