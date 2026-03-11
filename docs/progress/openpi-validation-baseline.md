@@ -42,13 +42,17 @@ cd src/mint && .venv/bin/pytest \
   tests/test_model_registry_env_config.py \
   tests/test_gateway_multi_target_routing.py \
   tests/test_client_compat_user_agent.py \
+  tests/test_issue_190_checkpoint_archive_auth_signed_url.py \
+  tests/test_issue_218_gateway_checkpoint_proxy.py \
   tests/test_issue_281_scheduler_and_healthz.py \
   tests/test_tinker_prompt_logprobs_semantics.py \
   tests/test_openpi_app_registration.py \
   tests/test_openpi_config_validation.py \
   tests/test_openpi_service_contract.py \
   tests/test_openpi_does_not_pollute_tinker_types.py \
-  tests/test_openpi_runtime_bridge.py -q
+  tests/test_openpi_runtime_bridge.py \
+  tests/test_openpi_artifact_proxy.py \
+  tests/test_openpi_training_contract.py -q
 ```
 
 What these gates cover:
@@ -57,17 +61,20 @@ What these gates cover:
 - model registry env overrides
 - gateway multi-target routing behavior
 - client user-agent compatibility logic
+- checkpoint archive auth and checkpoint proxy regressions around existing paths
 - healthz and route labeling behavior
 - prompt logprobs semantics for the Tinker-compatible path
 - OpenPI config gate and app registration behavior
 - OpenPI schema isolation from token-only types
 - OpenPI inference runtime bridge and HTTP status mapping
+- OpenPI artifact resolve/archive contract and checkpoint reference restrictions
+- OpenPI training start async envelope, FutureStore queueing semantics and Mint-owned run/checkpoint URI mapping
 
 What these gates do not cover:
 
-- OpenPI artifact proxy
-- OpenPI training endpoints
+- live Ray-backed FutureStore behavior under a real OpenPI training workload
 - toolkit namespace / SDK contract
+- deterministic cross-repo closed loop
 
 ### `src/mindlab-toolkit`
 
@@ -105,8 +112,9 @@ These are useful, but they are not hard gates for the first implementation pass.
 | --- | --- |
 | OpenPI integration facade tests | `src/openpi/src/openpi/integration/runtime_test.py`, `src/openpi/src/openpi/integration/artifacts_test.py`, `src/openpi/src/openpi/integration/training_test.py` |
 | OpenPI script adapter tests | `src/openpi/scripts/train_adapter_test.py`, `src/openpi/scripts/serve_policy_test.py` |
-| Mint OpenPI route and schema tests | `src/mint/tests/test_openpi_app_registration.py`, `src/mint/tests/test_openpi_config_validation.py`, `src/mint/tests/test_openpi_service_contract.py`, `src/mint/tests/test_openpi_does_not_pollute_tinker_types.py` |
+| Mint OpenPI route, schema and artifact tests | `src/mint/tests/test_openpi_app_registration.py`, `src/mint/tests/test_openpi_config_validation.py`, `src/mint/tests/test_openpi_service_contract.py`, `src/mint/tests/test_openpi_does_not_pollute_tinker_types.py`, `src/mint/tests/test_openpi_artifact_proxy.py` |
 | Mint to OpenPI runtime bridge tests | `src/mint/tests/test_openpi_runtime_bridge.py` |
+| Mint OpenPI async training contract tests | `src/mint/tests/test_openpi_training_contract.py` |
 | Toolkit `mint.openpi.*` namespace tests | missing |
 | Toolkit OpenPI SDK contract tests | missing |
 | deterministic cross-repo closed loop | missing |
@@ -117,7 +125,7 @@ These are useful, but they are not hard gates for the first implementation pass.
 | Area | Positive signal | Negative signal |
 | --- | --- | --- |
 | OpenPI | deterministic runtime/artifact/training tests, script adapter tests and LoRA tests still pass after facade extraction | script adapters stop delegating or local training smoke breaks |
-| Mint | OpenPI config gate, schema isolation and inference bridge pass without touching token-only types | old `/api/v1` path changes semantics, token-only types gain OpenPI fields, or new OpenPI path returns ambiguous HTTP errors |
+| Mint | OpenPI config gate, schema isolation, inference bridge, artifact proxy and training envelope pass without touching token-only types | old `/api/v1` path changes semantics, token-only types gain OpenPI fields, new OpenPI path returns ambiguous HTTP errors, or artifact route leaks non-checkpoint paths |
 | Toolkit | `mint.openpi.*` imports and behaves as designed | top-level `mint.*` re-export or existing patch behavior changes |
 | Cross-repo | deterministic fake-runtime loop works end-to-end | failure cannot be localized to runtime vs service vs SDK |
 
