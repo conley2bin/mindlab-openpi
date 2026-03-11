@@ -20,10 +20,12 @@
 ## Existing Validation Reality
 
 - `src/openpi/.github/workflows/test.yml` 当前会跑 `uv run pytest --strict-markers -m "not manual"`。
+- `src/openpi/src/openpi/models/model_test.py` 同时包含 deterministic local tests 和 `test_model_restore` manual case；任何硬门禁命令都必须显式过滤 manual marker 或 node id。
 - `src/openpi/src/openpi/policies/policy_test.py` 是 `manual`，不能当 CI gate。
 - `src/openpi/src/openpi/shared/download_test.py` 依赖远端资源，适合 exploratory lane，不适合首批硬门禁。
 - `src/mint` 已经有大量旧路径 regression anchors，特别是 config、gateway、user-agent、prompt-logprobs 语义。
 - `src/mindlab-toolkit` 目前只有两组硬约束测试: namespace contract 和 patch behavior。
+- workspace root 当前没有 `tests/`、`scripts/`、`.github/`，因此 root-level harness/CI 不是既有执行面，而是额外 integration-infra 决策。
 
 ## Phase 1: Write The Compatibility Matrix Before Feature Work
 
@@ -58,7 +60,7 @@
 **OpenPI local gates**
 
 ```bash
-cd src/openpi && uv run pytest src/openpi/models/model_test.py -q
+cd src/openpi && uv run pytest --strict-markers -m "not manual" src/openpi/models/model_test.py -q
 cd src/openpi && uv run pytest src/openpi/models/lora_test.py -q
 cd src/openpi && uv run pytest scripts/train_test.py -q
 ```
@@ -71,6 +73,7 @@ cd src/mint && pytest \
   tests/test_model_registry_env_config.py \
   tests/test_gateway_multi_target_routing.py \
   tests/test_client_compat_user_agent.py \
+  tests/test_issue_281_scheduler_and_healthz.py \
   tests/test_tinker_prompt_logprobs_semantics.py -q
 ```
 
@@ -85,8 +88,9 @@ cd src/mindlab-toolkit && pytest \
 **Steps**
 
 1. 把 must-pass local gates 和 exploratory/manual lanes 分开写。
-2. 不允许把远端 checkpoint、manual policy inference、跨仓联调当成 repo-local 替代品。
-3. 每个 ST 的 exit gate 都必须先通过对应 repo-local lane。
+2. `test_model_restore`、manual policy inference、远端 download tests 全部明确归到 exploratory lane；不能混进 deterministic gate。
+3. 不允许把远端 checkpoint、manual policy inference、跨仓联调当成 repo-local 替代品。
+4. 每个 ST 的 exit gate 都必须先通过对应 repo-local lane。
 
 ## Phase 3: Land Repo-Local Contract Tests In The Owning ST
 
@@ -112,20 +116,23 @@ cd src/mindlab-toolkit && pytest \
 
 **Create**
 
-- `src/mint/tests/test_openpi_runtime_bridge.py`
-- `src/mindlab-toolkit/tests/test_openpi_sdk_contract.py`
 - Update `docs/progress/openpi-validation-baseline.md`
 
 **Steps**
 
 1. 第一条跨仓闭环必须使用 fake runtime or test double，不直接依赖真实 released checkpoint。
-2. 最小闭环顺序固定为:
+2. 在实现前先做 harness ownership 决策，只允许三种落点：
+   - workspace root
+   - `src/mint/tests/` 作为 service-hosted integration lane
+   - 单独 integration repo
+3. 在 ownership 未决前，`ST-05` 先只冻结闭环验证 contract 和通过条件，不预先承诺文件落点。
+4. 最小闭环顺序固定为:
    - `src/openpi` runtime facade returns deterministic fake observation/action result
    - `src/mint` service plane wraps and returns it
    - `src/mindlab-toolkit` SDK calls service and decodes response
-3. 闭环必须验证结构化 observation/action payload，不只看 200 OK。
-4. 闭环必须包含至少一个 lifecycle signal，例如 `reset()` 或 action chunk boundary。
-5. 闭环失败时必须在 baseline 文档里归因到具体层级。
+5. 闭环必须验证结构化 observation/action payload，不只看 200 OK。
+6. 闭环必须包含至少一个 lifecycle signal，例如 `reset()` 或 action chunk boundary。
+7. 闭环失败时必须在 baseline 文档里归因到具体层级。
 
 **Gate**
 
@@ -148,19 +155,20 @@ cd src/openpi && uv run pytest src/openpi/shared/download_test.py -q
 
 ## Phase 6: Wire CI And Release Discipline
 
-**Inspect Or Modify**
+**Create Or Modify**
 
 - `src/openpi/.github/workflows/test.yml`
-- CI definitions for `src/mint`
-- CI definitions for `src/mindlab-toolkit`
+- `src/mint/.github/workflows/test.yml`
+- `src/mindlab-toolkit/.github/workflows/test.yml`
 - `docs/progress/openpi-compatibility-matrix.md`
 
 **Steps**
 
 1. 维持 `openpi` 现有 `not manual` CI lane。
-2. 为 Mint 和 Toolkit 增加等价的 hard-gate commands，至少覆盖现有 regression anchors 和新增 OpenPI contract tests。
-3. 每次 capability 或 version 组合变化时，先更新 matrix，再更新代码和 release notes。
-4. 明确支持的 repo/version 组合；不要默认三仓永远同日发布。
+2. 为 Mint 和 Toolkit 创建等价的 repo-local hard-gate workflow，至少覆盖现有 regression anchors 和新增 OpenPI contract tests。
+3. root-level cross-repo workflow 只有在 harness ownership 已经明确后才引入；它不属于默认前提。
+4. 每次 capability 或 version 组合变化时，先更新 matrix，再更新代码和 release notes。
+5. 明确支持的 repo/version 组合；不要默认三仓永远同日发布。
 
 ## Exit Criteria
 

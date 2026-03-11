@@ -18,22 +18,25 @@
 - `src/openpi/scripts/train.py` 和 `src/openpi/scripts/train_pytorch.py` 是当前 training 装配入口。
 - `src/openpi/src/openpi/training/checkpoints.py`、`src/openpi/src/openpi/training/weight_loaders.py` 持有 artifact truth。
 - `src/openpi/packages/openpi-client/src/openpi_client/base_policy.py` 是最小 policy interface。
+- `src/openpi/packages/openpi-client/src/openpi_client/action_chunk_broker.py` 是当前 action chunk lifecycle 适配器。
+- `src/openpi/packages/openpi-client/src/openpi_client/websocket_client_policy.py` 是 remote inference client adapter，不是 Mint embedding contract。
 - `src/openpi/packages/openpi-client/src/openpi_client/runtime/runtime.py` 是 runtime loop reference，不是 Mint 集成 API。
 
 ## Test Anchor Classification
 
 **Must-pass local anchors**
 
-- `cd src/openpi && uv run pytest src/openpi/models/model_test.py -q`
+- `cd src/openpi && uv run pytest --strict-markers -m "not manual" src/openpi/models/model_test.py -q`
 - `cd src/openpi && uv run pytest src/openpi/models/lora_test.py -q`
 - `cd src/openpi && uv run pytest scripts/train_test.py -q`
 
 **Exploratory or network-dependent anchors**
 
+- `src/openpi/src/openpi/models/model_test.py::test_model_restore` 标记为 `manual`
 - `src/openpi/src/openpi/policies/policy_test.py` 标记为 `manual`
 - `src/openpi/src/openpi/shared/download_test.py` 依赖远端资源
 
-后续新增 contract tests 必须先落在 local lane，不能把 Mint 集成硬绑到 manual 或远端 checkpoint 测试上。
+当前仓库还没有 deterministic 的 inference facade hard gate。`ST-02` Phase 1 必须先补这一层，不能把 Mint 集成硬绑到 manual 或远端 checkpoint 测试上。
 
 ## Recommended Package Layout
 
@@ -62,13 +65,14 @@
 1. 定义 Mint-facing inference handle，至少显式覆盖 `load`, `infer`, `reset`, `metadata` 四个能力。
 2. 把 checkpoint resolution、model backend detection、transform stack assembly 从 `policy_config.py` 收敛到 facade 后面。
 3. 保持 facade 输入输出仍是 OpenPI observation/action/multimodal 语义，不引入 token prompt wrapper。
-4. 明确错误边界，至少区分 checkpoint missing、asset missing、unsupported backend、invalid observation shape。
-5. 为 facade 写本地可跑 contract tests，使用 fake config/fake observation，不依赖远端 checkpoint。
+4. 明确 facade 与 `BasePolicy` / `ActionChunkBroker` 的关系：Mint 依赖 integration handle，不直接依赖 websocket client/server，但 action chunk lifecycle 不能在 facade 里被抹平。
+5. 明确错误边界，至少区分 checkpoint missing、asset missing、unsupported backend、invalid observation shape。
+6. 为 facade 写本地可跑 contract tests，使用 fake config/fake observation，不依赖远端 checkpoint。
 
 **Commands**
 
 ```bash
-cd src/openpi && uv run pytest src/openpi/models/model_test.py -q
+cd src/openpi && uv run pytest --strict-markers -m "not manual" src/openpi/models/model_test.py -q
 cd src/openpi && uv run pytest src/openpi/integration/runtime_test.py -q
 ```
 
@@ -76,6 +80,7 @@ cd src/openpi && uv run pytest src/openpi/integration/runtime_test.py -q
 
 - `integration/runtime.py` 可以独立于 websocket server 被调用。
 - `runtime_test.py` 不依赖 `manual` marker 或远端资源。
+- `src/openpi/models/model_test.py::test_model_restore` 不再被当成 facade 的 deterministic proof。
 - `policy_test.py` 仍然只是 exploratory lane，不充当唯一 contract proof。
 
 ## Phase 2: Introduce An Artifact Facade

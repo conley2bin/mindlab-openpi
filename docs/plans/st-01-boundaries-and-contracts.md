@@ -23,8 +23,12 @@
 
 - `src/mint/tinker_server/models/types.py` 是当前 Mint canonical token/chunk service schema。
 - `src/mint/tinker_server/routes/service.py` 和 `src/mint/tinker_server/routes/sampling.py` 是当前 Tinker-compatible session/sampling 语义入口。
+- `src/mint/tinker_server/client_compat.py` 是当前 User-Agent 与 checkpoint URI 兼容逻辑入口，后续 OpenPI SDK 不能无意触发它的旧路径分支。
+- `src/mint/tinker_server/routes/weights.py` 是当前 checkpoint archive / download / proxy 语义入口。
 - `src/openpi/src/openpi/policies/policy.py` 和 `src/openpi/packages/openpi-client/src/openpi_client/base_policy.py` 定义当前 `obs -> action` / `reset()` policy contract。
 - `src/openpi/src/openpi/policies/policy_config.py` 是当前训练产物到 inference policy 的装配边界。
+- `src/openpi/packages/openpi-client/src/openpi_client/action_chunk_broker.py` 是当前 action chunk lifecycle 的显式语义锚点。
+- `src/openpi/packages/openpi-client/src/openpi_client/image_tools.py` 是当前多模态图像 payload 预处理边界。
 - `src/mindlab-toolkit/src/mint/__init__.py`、`src/mindlab-toolkit/src/mint/tinker/__init__.py`、`src/mindlab-toolkit/src/mint/mint/__init__.py` 共同定义当前 `mint.*` public namespace 和 patch side effects。
 - `src/mindlab-toolkit/tests/test_namespace_contract.py` 是当前 SDK namespace 的硬约束。
 
@@ -40,10 +44,14 @@
 - `src/openpi/src/openpi/policies/policy.py`
 - `src/openpi/src/openpi/policies/policy_config.py`
 - `src/openpi/packages/openpi-client/src/openpi_client/base_policy.py`
+- `src/openpi/packages/openpi-client/src/openpi_client/action_chunk_broker.py`
+- `src/openpi/packages/openpi-client/src/openpi_client/image_tools.py`
 - `src/mindlab-toolkit/src/mint/__init__.py`
 - `src/mindlab-toolkit/src/mint/tinker/__init__.py`
 - `src/mindlab-toolkit/src/mint/mint/__init__.py`
 - `src/mindlab-toolkit/tests/test_namespace_contract.py`
+- `src/mint/tinker_server/client_compat.py`
+- `src/mint/tinker_server/routes/weights.py`
 
 **Write**
 
@@ -54,7 +62,8 @@
 1. 记录 `src/mint` 当前 token-only service truth，不写未来 OpenPI 设计。
 2. 记录 `src/openpi` 当前 observation/action/multimodal/reset truth，不把它翻译成 token 语义。
 3. 记录 `src/mindlab-toolkit` 当前 namespace truth 和 import side effects。
-4. 在 baseline 文档里分开写 “current truth” 和 “gap to target”，不要把未来方案写进 current truth。
+4. 单独记录 Mint 当前 `User-Agent -> checkpoint URI` 兼容逻辑与 OpenPI 未来 transport identity 之间的边界，不把它们混成一个“客户端默认行为”。
+5. 在 baseline 文档里分开写 “current truth” 和 “gap to target”，不要把未来方案写进 current truth。
 
 **Commands**
 
@@ -85,7 +94,7 @@ cd src/mindlab-toolkit && pytest tests/test_namespace_contract.py -q
 
 **Steps**
 
-1. 定义至少这些术语的唯一含义: runtime, policy, service contract, artifact, session, episode, action chunk, checkpoint。
+1. 定义至少这些术语的唯一含义: runtime, policy, service contract, artifact, artifact reference, session, episode, action chunk, checkpoint, client transport identity。
 2. 定义 ownership matrix:
    - `src/openpi` 持有 semantic objects 和 runtime truth。
    - `src/mint` 持有 service envelope、task orchestration、ops surface。
@@ -94,6 +103,7 @@ cd src/mindlab-toolkit && pytest tests/test_namespace_contract.py -q
    - 不把 OpenPI observation/action 伪装成 Mint 现有 token request。
    - 不把 `mint.openpi.*` 偷偷 re-export 到现有顶层 `mint.*`。
    - 不在 Mint 或 Toolkit 内复制 OpenPI 私有 runtime logic。
+   - 不让新的 OpenPI SDK transport identity 无意触发 Mint 现有 `client_compat.py` 的 Tinker-compatible 分支。
 4. 明确允许跨仓传递的对象边界，禁止 “双方各自定义一份 canonical schema”。
 
 **Commands**

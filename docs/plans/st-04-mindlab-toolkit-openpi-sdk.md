@@ -4,7 +4,7 @@
 
 **Goal:** 在 `src/mindlab-toolkit` 中新增显式 `mint.openpi.*` namespace，让用户能调用 Mint 的 OpenPI service surface，同时保持现有 `mint.*` 和 `mint.tinker.*` compatibility contract 不变。
 
-**Architecture:** 先保住现有 namespace 和 patch side effects，再新增 `mint.openpi` 子包。OpenPI SDK 不伪装成 `tinker` client，也不通过顶层 re-export 偷偷改义。首个版本只做 Mint service client，不要求替代 `openpi-client` 的直接 runtime client 生态。
+**Architecture:** 先保住现有 namespace 和 patch side effects，再新增 `mint.openpi` 子包。OpenPI SDK 不伪装成 `tinker` client，也不通过顶层 re-export 偷偷改义。首个版本只做 Mint service client，不要求替代 `openpi-client` 的直接 runtime client 生态。当前 `mint` 包导入时总会执行 `apply_mint_patches()` 并校验 `tinker==0.6.0`；首个 `mint.openpi` cut 暂时接受这层包级耦合，但它只是临时约束，不是长期 contract，本计划不在这一轮重写顶层 import graph。
 
 **Tech Stack:** Python packaging, `httpx`-style explicit HTTP client or equivalent transport, pytest
 
@@ -17,6 +17,13 @@
 - `src/mindlab-toolkit/src/mint/mint/__init__.py` 当前 patch layer 会修改 `tinker` 的 client init、sampling session path、future polling、telemetry。
 - `src/mindlab-toolkit/tests/test_namespace_contract.py` 锁定顶层 re-export 和版本语义。
 - `src/mindlab-toolkit/tests/test_mint_polling_patch.py` 锁定 patch behavior。
+- Cross-repo contract anchor: `src/mint/tinker_server/client_compat.py` 会根据 User-Agent 选择旧 `tinker://` / `mint://` checkpoint URI 行为，`mint.openpi` 不能无意触发它。
+
+## Temporary Constraint
+
+- 当前 `mint.openpi` 首个 cut 仍然处于 `import mint` 的包级导入链下，因此会跟随现有 `apply_mint_patches()` 和 `tinker==0.6.0` version guard 一起发生。
+- 这只是当前包结构的临时约束，不应被解释成长期 public contract。
+- 后续如果 OpenPI surface 稳定，必须单独判断是否允许 `mint.openpi` 在不加载旧 patch stack 的情况下导入。
 
 ## Must-Pass Existing Regression Anchors
 
@@ -86,19 +93,23 @@ cd src/mindlab-toolkit && pytest \
 **Steps**
 
 1. 为 `mint.openpi` 增加显式 transport dependency，而不是偷偷借用 `tinker` 的 token client internals。
-2. 定义 OpenPI service base URL、auth、timeout、polling policy 等 config objects。
-3. 把 Mint version、Tinker compatibility version、OpenPI capability version 分开表达，不混在 `__version__` 里。
+2. 显式定义 `mint.openpi` 的 transport identity，包括 User-Agent/header strategy；默认不要复用 `Mint/Python`，避免误触 Mint 现有 Tinker-compatible heuristics。
+3. 定义 OpenPI service base URL、auth、timeout、polling policy 等 config objects。
+4. 把 Mint version、Tinker compatibility version、OpenPI capability version 分开表达，不混在 `__version__` 里。
 
 **Commands**
 
 ```bash
-cd src/mindlab-toolkit && python -m pytest tests/test_namespace_contract.py -q
+cd src/mindlab-toolkit && python -m pytest \
+  tests/test_namespace_contract.py \
+  tests/test_openpi_namespace_contract.py -q
 ```
 
 **Gate**
 
 - `pyproject.toml` 里的 transport dependency 决策已经落地。
 - config objects 与现有 `mint.mint` env patching 语义隔离。
+- OpenPI client identity 不会无意满足 `is_tinker_sdk_user_agent()`。
 
 ## Phase 3: Define OpenPI Types And Client
 
@@ -115,8 +126,7 @@ cd src/mindlab-toolkit && python -m pytest tests/test_namespace_contract.py -q
 3. `mint.openpi` 先暴露最小 stable surface:
    - inference call
    - task/future query
-   - artifact query
-4. training methods 等到 `ST-03` training route 稳定后再暴露，不提前占位。
+4. training methods 和 artifact query 等到 `ST-03` 对应服务面稳定后再暴露，不提前占位。
 
 **Commands**
 
@@ -130,6 +140,7 @@ cd src/mindlab-toolkit && pytest \
 
 - `mint.openpi` 的 public names 体现 OpenPI observation/action 语义，不模仿 `SamplingClient`。
 - SDK 只依赖 Mint service contract，不直接依赖 `src/openpi` 内部实现。
+- SDK 首个 stable surface 只依赖 `ST-03` 已经落地的 inference path 和 task/future query path。
 
 ## Phase 4: Keep Patch Side Effects Contained
 
