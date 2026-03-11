@@ -79,21 +79,25 @@ What these gates do not cover:
 ### `src/mindlab-toolkit`
 
 ```bash
-cd src/mindlab-toolkit && pytest \
+cd src/mindlab-toolkit && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run python -m pytest \
   tests/test_namespace_contract.py \
-  tests/test_mint_polling_patch.py -q
+  tests/test_mint_polling_patch.py \
+  tests/test_openpi_namespace_contract.py \
+  tests/test_openpi_sdk_contract.py -q
 ```
 
 What these gates cover:
 
 - current top-level namespace contract
 - current patch side effects for the Tinker-compatible layer
+- explicit `mint.openpi.*` namespace contract
+- OpenPI SDK config, distinct client identity, Mint OpenPI request envelopes and future payload mapping
 
 What these gates do not cover:
 
-- `mint.openpi.*`
-- OpenPI service client transport
-- SDK mapping to Mint OpenPI service schemas
+- live Mint OpenPI deployment behavior
+- real FutureStore polling against a running Mint service
+- deterministic cross-repo closed loop
 
 ## Current Weak Lanes
 
@@ -115,8 +119,9 @@ These are useful, but they are not hard gates for the first implementation pass.
 | Mint OpenPI route, schema and artifact tests | `src/mint/tests/test_openpi_app_registration.py`, `src/mint/tests/test_openpi_config_validation.py`, `src/mint/tests/test_openpi_service_contract.py`, `src/mint/tests/test_openpi_does_not_pollute_tinker_types.py`, `src/mint/tests/test_openpi_artifact_proxy.py` |
 | Mint to OpenPI runtime bridge tests | `src/mint/tests/test_openpi_runtime_bridge.py` |
 | Mint OpenPI async training contract tests | `src/mint/tests/test_openpi_training_contract.py` |
-| Toolkit `mint.openpi.*` namespace tests | missing |
-| Toolkit OpenPI SDK contract tests | missing |
+| Toolkit `mint.openpi.*` namespace tests | `src/mindlab-toolkit/tests/test_openpi_namespace_contract.py` |
+| Toolkit OpenPI SDK contract tests | `src/mindlab-toolkit/tests/test_openpi_sdk_contract.py` |
+| Toolkit to Mint live service smoke | missing |
 | deterministic cross-repo closed loop | missing |
 | release matrix by repo/version combination | missing |
 
@@ -143,8 +148,9 @@ Do not write “OpenPI integration failed” without this classification.
 ## Current Environment-Specific Failures
 
 - `src/openpi/src/openpi/models/model_test.py` 当前在本机 GPU 上失败于模型初始化阶段的 `RESOURCE_EXHAUSTED`。堆栈停在 `pi0` / `pi0_fast` model create，不经过 `openpi.integration.*`。
-- 当前环境直接跑 `pytest` 会被外部 ROS 插件污染 collection；`src/openpi` 验证需要显式设置 `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`。
+- 当前环境直接跑 `pytest` 会被外部 ROS 插件污染 collection；`src/openpi` 和 `src/mindlab-toolkit` 验证都需要显式设置 `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`。
 - 并发运行 `train_test.py` 与其他 JAX tests 会污染设备初始化状态，可能把原本可通过的 `lora_test.py` 拖成 CUDA backend init failure。当前 `src/openpi` 验证应串行执行。
+- `src/mindlab-toolkit` 当前 `uv run` 默认拉起 CPython 3.14.2，`tinker` 会发出 “Pydantic V1 functionality isn't compatible with Python 3.14 or greater” warning。当前 31 个 Toolkit tests 可通过，但这不是 Python 3.14 clean-support 证明。
 
 ## First Deterministic Closed-Loop Rule
 
