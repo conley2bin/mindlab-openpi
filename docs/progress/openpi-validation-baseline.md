@@ -114,7 +114,7 @@ What this gate covers:
 - Toolkit SDK to Mint OpenPI training start and generic `retrieve_future` closed loop
 - structured observation/action payload across repo boundaries
 - Mint-owned artifact resolve summary and archive transport contract
-- Mint-owned async training future envelope and typed training result decode
+- Mint-owned async training future pending / failure / success envelope and typed training result decode
 - lifecycle signal propagation via `reset_before_infer`
 
 What this gate does not cover:
