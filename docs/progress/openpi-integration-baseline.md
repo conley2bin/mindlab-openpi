@@ -11,15 +11,15 @@ Baseline date: 2026-03-12
 | Repo | Current truth | Hard anchors | Missing for integration |
 | --- | --- | --- | --- |
 | `src/openpi` | 已有 standalone inference、policy 装配、training scripts、checkpoint 逻辑和 `openpi-client`。canonical inference/artifact/training 装配已经收敛进 `src/openpi/src/openpi/integration/{runtime,artifacts,training}.py`。`src/openpi/src/openpi/policies/policy_config.py`、`src/openpi/scripts/serve_policy.py`、`src/openpi/scripts/train.py`、`src/openpi/scripts/train_pytorch.py` 和 `src/openpi/scripts/train_test.py` 都已经转向 integration-facing surface；`src/openpi/src/openpi/__init__.py` 当前只导出稳定 inference/training entry。 | `src/openpi/src/openpi/policies/policy.py`, `src/openpi/src/openpi/integration/runtime.py`, `src/openpi/src/openpi/integration/artifacts.py`, `src/openpi/src/openpi/integration/training.py`, `src/openpi/src/openpi/training/checkpoints.py`, `src/openpi/scripts/serve_policy_test.py`, `src/openpi/scripts/train_test.py`, `src/openpi/scripts/train_adapter_test.py` | 缺口已经从“提炼 OpenPI runtime surface”转移到“让 Mint 和 Toolkit 真正消费这层 surface”，以及后续跨仓验证。 |
-| `src/mint` | 当前 public service surface 仍以 Tinker-compatible token/chunk API 为主，但 gated OpenPI plane 已覆盖 inference、artifact 和 training start。`src/mint/tinker_server/openpi/{routes,models,backend}.py` 现在承载独立 OpenPI route family、schema family、runtime bridge、artifact proxy 和 training bridge；`src/mint/tinker_server/checkpoints.py` 新增 checkpoint-scoped reference resolution；`src/mint/tinker_server/app.py` 只在 `TINKER_OPENPI_ENABLED=1` 时注册 `/api/v1/openpi/*` 与 `/internal/openpi/*`。`src/mint/tinker_server/models/types.py` 仍只服务于 tinker client compatibility。 | `src/mint/tinker_server/app.py`, `src/mint/tinker_server/checkpoints.py`, `src/mint/tinker_server/openpi/routes.py`, `src/mint/tinker_server/openpi/models.py`, `src/mint/tinker_server/openpi/backend.py`, `src/mint/tests/test_openpi_app_registration.py`, `src/mint/tests/test_openpi_service_contract.py`, `src/mint/tests/test_openpi_runtime_bridge.py`, `src/mint/tests/test_openpi_artifact_proxy.py`, `src/mint/tests/test_openpi_training_contract.py`, `src/mint/tests/test_issue_190_checkpoint_archive_auth_signed_url.py`, `src/mint/tests/test_issue_218_gateway_checkpoint_proxy.py`, `src/mint/tests/test_gateway_multi_target_routing.py`, `src/mint/tests/test_client_compat_user_agent.py`, `src/mint/tests/test_tinker_prompt_logprobs_semantics.py` | 缺口已经从 Mint service plane 本体转移到 Toolkit SDK、deterministic cross-repo closed loop，以及后续 remote deployment / ops 扩展。 |
+| `src/mint` | 当前 public service surface 仍以 Tinker-compatible token/chunk API 为主，但 gated OpenPI plane 已覆盖 status、inference、artifact 和 training start。`src/mint/tinker_server/openpi/{routes,models,backend}.py` 现在承载独立 OpenPI route family、schema family、runtime bridge、artifact proxy 和 training bridge；`src/mint/tinker_server/checkpoints.py` 新增 checkpoint-scoped reference resolution；`src/mint/tinker_server/app.py` 只在 `TINKER_OPENPI_ENABLED=1` 时注册 `/api/v1/openpi/*` 与 `/internal/openpi/*`。`src/mint/tinker_server/models/types.py` 仍只服务于 tinker client compatibility。 | `src/mint/tinker_server/app.py`, `src/mint/tinker_server/checkpoints.py`, `src/mint/tinker_server/openpi/routes.py`, `src/mint/tinker_server/openpi/models.py`, `src/mint/tinker_server/openpi/backend.py`, `src/mint/tests/test_openpi_app_registration.py`, `src/mint/tests/test_openpi_service_contract.py`, `src/mint/tests/test_openpi_runtime_bridge.py`, `src/mint/tests/test_openpi_artifact_proxy.py`, `src/mint/tests/test_openpi_training_contract.py`, `src/mint/tests/test_openpi_cross_repo_closed_loop.py`, `src/mint/tests/test_issue_190_checkpoint_archive_auth_signed_url.py`, `src/mint/tests/test_issue_218_gateway_checkpoint_proxy.py`, `src/mint/tests/test_gateway_multi_target_routing.py`, `src/mint/tests/test_client_compat_user_agent.py`, `src/mint/tests/test_tinker_prompt_logprobs_semantics.py` | 缺口已经从 Mint service plane 本体转移到 live-service / real-asset lane、remote deployment / ops 扩展，以及后续 release discipline。 |
 | `src/mindlab-toolkit` | 当前 package 已从“只有 patched tinker compatibility layer”扩展成“双命名空间”形态。`src/mindlab-toolkit/src/mint/__init__.py` 仍会先执行 `apply_mint_patches()` 并保持顶层 `mint.*` re-export，但现在已经显式暴露 `mint.openpi.*`。`src/mindlab-toolkit/src/mint/openpi/{config,types,client}.py` 提供独立 OpenPI config/type/client surface，通过显式 HTTP transport 访问 Mint OpenPI service plane。 | `src/mindlab-toolkit/src/mint/__init__.py`, `src/mindlab-toolkit/src/mint/tinker/__init__.py`, `src/mindlab-toolkit/src/mint/mint/__init__.py`, `src/mindlab-toolkit/src/mint/openpi/config.py`, `src/mindlab-toolkit/src/mint/openpi/types.py`, `src/mindlab-toolkit/src/mint/openpi/client.py`, `src/mindlab-toolkit/tests/test_namespace_contract.py`, `src/mindlab-toolkit/tests/test_mint_polling_patch.py`, `src/mindlab-toolkit/tests/test_openpi_namespace_contract.py`, `src/mindlab-toolkit/tests/test_openpi_sdk_contract.py` | 缺口已经从 SDK namespace / transport 本体转移到 live service smoke、real-asset lane 和 release/version discipline。 |
 
 ## Cross-Repo Reality
 
 - 已有一条 deterministic fake-runtime closed loop，从 Toolkit SDK 到 Mint service 再到 fake OpenPI runtime，锚点是 `src/mint/tests/test_openpi_cross_repo_closed_loop.py`。
 - 已有 repo-owned compatibility matrix，见 `docs/progress/openpi-compatibility-matrix.md`。
-- 目前已经有 deterministic inference-only cross-repo closed loop，但还没有 real-asset 或 live deployment lane。
-- 三仓现在都已经有 OpenPI-specific repo-local contract tests；缺的仍是 shared deterministic closed loop。
+- 目前已经有 deterministic status + inference cross-repo closed loop，但还没有 real-asset 或 live deployment lane。
+- 三仓现在都已经有 OpenPI-specific repo-local contract tests；缺的是 live-service / real-asset lane 与 release/version discipline。
 
 ## Semantic Split Observed Today
 
@@ -33,21 +33,21 @@ Baseline date: 2026-03-12
 
 | ST | Current gap |
 | --- | --- |
-| `ST-01` | 当前没有 baseline 文档和 glossary。三仓术语还没有被写成单一 reference。 |
+| `ST-01` | baseline、validation baseline 和 glossary 已落地。剩余缺口是持续保持 docs/progress 与 docs/targets 同步，不让 current truth 再次分叉。 |
 | `ST-02` | OpenPI runtime/artifact/training facade、脚本 adapter 和 stable export 已落地。剩余缺口不在 `src/openpi` 内部抽象层，而在 `src/mint` / `src/mindlab-toolkit` 的消费与跨仓验证。 |
 | `ST-03` | `src/mint` 的 OpenPI service plane 已完成首批目标：config gate、route family、schema family、inference bridge、artifact proxy 和 training start 已落地。剩余缺口已转移到 SDK 消费面和跨仓闭环验证。 |
 | `ST-04` | `src/mindlab-toolkit` 已有显式 `mint.openpi.*` namespace、独立 config/type/client 和 transport dependency。剩余缺口已转移到跨仓闭环和 live service validation。 |
-| `ST-05` | compatibility matrix、validation baseline、三仓 repo-local contract tests 和 deterministic fake-runtime closed loop 都已落地。剩余缺口是 live-service / real-asset lane 与后续 release discipline。 |
+| `ST-05` | compatibility matrix、validation baseline、三仓 repo-local contract tests 和 deterministic fake-runtime status + inference closed loop 都已落地。剩余缺口是 live-service / real-asset lane 与后续 release discipline。 |
 
 ## Current Working Cut For The First Implementation Pass
 
 这不是“已经支持”的范围，而是当前文档链收敛后的首批切面。
 
-- 当前跨仓 deterministic closed loop 只做 inference-only，锚点是 `src/mint/tests/test_openpi_cross_repo_closed_loop.py`。
+- 当前跨仓 deterministic closed loop 覆盖 public status probe 与 inference path，锚点是 `src/mint/tests/test_openpi_cross_repo_closed_loop.py`。
 - 首批 deterministic local lane 不依赖真实 checkpoint，使用 fake runtime 或 test double。
-- 当前 Mint service cut 已经落在 `src/mint/tinker_server/openpi/routes.py` 的 `/api/v1/openpi/{infer,artifacts/resolve,artifacts/archive,training/start}`；其中 inference 通过 fake runtime bridge test double 验证 lifecycle 和错误映射，artifact/training 则通过 checkpoint/future contract tests 固定边界。
-- 当前 Toolkit SDK cut 已经落在 `src/mindlab-toolkit/src/mint/openpi/{config,types,client}.py`，通过显式 HTTP client 调用 Mint OpenPI service surface；默认 `User-Agent` 为 `MintOpenPI/Python ...`，不落入现有 Tinker compatibility heuristic。
-- 当前 cross-repo closed loop 通过 service-hosted harness 固定在 `src/mint/tests/test_openpi_cross_repo_closed_loop.py`：Toolkit SDK 发起请求，Mint OpenPI route 包装服务层，fake runtime 返回 deterministic action，并显式验证 `reset()` lifecycle signal。
+- 当前 Mint service cut 已经落在 `src/mint/tinker_server/openpi/routes.py` 的 `/api/v1/openpi/{status,infer,artifacts/resolve,artifacts/archive,training/start}`；其中 status 走 Mint-owned service envelope，inference 通过 fake runtime bridge test double 验证 lifecycle 和错误映射，artifact/training 则通过 checkpoint/future contract tests 固定边界。
+- 当前 Toolkit SDK cut 已经落在 `src/mindlab-toolkit/src/mint/openpi/{config,types,client}.py`，通过显式 HTTP client 调用 Mint OpenPI service surface；默认 `User-Agent` 为 `MintOpenPI/Python ...`，不落入现有 Tinker compatibility heuristic，并且 status decoder 已吸收 Mint 当前 `status/capabilities` payload。
+- 当前 cross-repo closed loop 通过 service-hosted harness 固定在 `src/mint/tests/test_openpi_cross_repo_closed_loop.py`：Toolkit SDK 发起 status / infer 请求，Mint OpenPI route 包装服务层，fake runtime 返回 deterministic action，并显式验证 status contract 与 `reset()` lifecycle signal。
 - 首批 real-asset exploratory lane 以 `pi0_aloha_sim` 为代表，因为：
   - `src/openpi/src/openpi/policies/policy_test.py` 当前使用 `pi0_aloha_sim`
   - `src/openpi/scripts/serve_policy.py` 当前对 ALOHA simulator 的默认 checkpoint 也是 `pi0_aloha_sim`

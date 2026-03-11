@@ -91,7 +91,7 @@ What these gates cover:
 - current top-level namespace contract
 - current patch side effects for the Tinker-compatible layer
 - explicit `mint.openpi.*` namespace contract
-- OpenPI SDK config, distinct client identity, Mint OpenPI request envelopes and future payload mapping
+- OpenPI SDK config, distinct client identity, Mint OpenPI request envelopes, current Mint status payload decoding and future payload mapping
 
 What these gates do not cover:
 
@@ -108,6 +108,7 @@ cd src/mint && .venv/bin/pytest \
 
 What this gate covers:
 
+- Mint OpenPI public status contract as consumed by Toolkit SDK
 - Toolkit SDK to Mint OpenPI service to fake OpenPI runtime closed loop
 - structured observation/action payload across repo boundaries
 - lifecycle signal propagation via `reset_before_infer`
@@ -170,7 +171,7 @@ Do not write “OpenPI integration failed” without this classification.
 - `src/openpi/src/openpi/models/model_test.py` 当前在本机 GPU 上失败于模型初始化阶段的 `RESOURCE_EXHAUSTED`。堆栈停在 `pi0` / `pi0_fast` model create，不经过 `openpi.integration.*`。
 - 当前环境直接跑 `pytest` 会被外部 ROS 插件污染 collection；`src/openpi` 和 `src/mindlab-toolkit` 验证都需要显式设置 `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`。
 - 并发运行 `train_test.py` 与其他 JAX tests 会污染设备初始化状态，可能把原本可通过的 `lora_test.py` 拖成 CUDA backend init failure。当前 `src/openpi` 验证应串行执行。
-- `src/mindlab-toolkit` 当前 `uv run` 默认拉起 CPython 3.14.2，`tinker` 会发出 “Pydantic V1 functionality isn't compatible with Python 3.14 or greater” warning。当前 31 个 Toolkit tests 可通过，但这不是 Python 3.14 clean-support 证明。
+- `src/mindlab-toolkit` 当前 `uv run` 默认拉起 CPython 3.14.2，`tinker` 会发出 “Pydantic V1 functionality isn't compatible with Python 3.14 or greater” warning。当前 Toolkit tests 可通过，但这不是 Python 3.14 clean-support 证明。
 
 ## First Deterministic Closed-Loop Rule
 
