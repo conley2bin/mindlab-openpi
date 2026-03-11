@@ -10,6 +10,17 @@
 
 ---
 
+## Boundary Inputs
+
+- `docs/progress/openpi-integration-baseline.md`
+- `docs/progress/openpi-contract-glossary.md`
+
+This plan inherits these `ST-01` rules:
+
+- `src/mindlab-toolkit` owns public naming, client ergonomics and dependency choices, not runtime semantics.
+- `mint.openpi.*` is an explicit namespace and must not silently redefine existing top-level `mint.*` exports.
+- Toolkit transport identity must stay distinct from the legacy Tinker-compatible `Mint/Python ...` path unless Mint service semantics explicitly require reuse.
+
 ## Existing Repo Anchors
 
 - `src/mindlab-toolkit/src/mint/__init__.py` 当前导入时会先执行 `apply_mint_patches()`，然后把 `mint.tinker` 大量 re-export 到顶层。

@@ -2,7 +2,7 @@
 
 ## Current Status
 
-- Status: drafted
+- Status: completed
 
 ## Objective
 
@@ -32,6 +32,10 @@
 - `src/mint` 当前围绕 `tinker_server` 组织，对外主语义仍是 Tinker-compatible service。
 - `src/openpi` 当前同时包含模型实现、训练逻辑、serving 入口、脚本工作流与 `openpi-client` 包，说明它既是研究仓库，也是未来运行时语义的唯一来源候选。
 - `src/mindlab-toolkit` 当前通过顶层 `mint.*` re-export 和 `mint.tinker.*` 兼容层对外提供 MinT 名称空间，说明外部契约已经存在，不能在 OpenPI 接入时被隐式改写。
+- `src/openpi/src/openpi/integration/{runtime,artifacts,training}.py` 现在已经成为 OpenPI runtime surface 的稳定入口，说明 runtime ownership 已经实际落在 `src/openpi`。
+- `src/mint/tinker_server/openpi/{routes,models,backend}.py` 现在已经成为独立 OpenPI service family，说明 service envelope ownership 已经实际落在 `src/mint`。
+- `src/mindlab-toolkit/src/mint/openpi/{config,types,client}.py` 现在已经成为显式 SDK namespace，说明 public naming 和 transport identity ownership 已经实际落在 `src/mindlab-toolkit`。
+- `docs/progress/openpi-integration-baseline.md` 与 `docs/progress/openpi-contract-glossary.md` 现在已经承接 current truth、术语和 ownership 口径，后续子目标应直接复用，而不是再次发明 vocabulary。
 - 三仓现状不是“一个主仓加两个薄封装”，而是三种历史抽象叠加后的并存状态，因此边界定义必须先于具体接入工作。
 - 这些 topology signals 只用于识别当前冲突面，不意味着后续必须冻结内部目录结构。
 
@@ -91,6 +95,7 @@
 - 后续子目标使用同一套术语描述对象边界。
 - OpenPI 相关接口不会与现有 Tinker-compatible 接口发生语义混淆。
 - 三仓之间不会因为职责不清而长期互相复制逻辑。
+- `docs/plans/st-02-openpi-runtime-surface.md` 到 `docs/plans/st-05-cross-repo-validation-and-compatibility.md` 都显式继承同一套 baseline/glossary 约束。
 
 ## Non-Goals
 

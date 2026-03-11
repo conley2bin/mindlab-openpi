@@ -10,6 +10,17 @@
 
 ---
 
+## Boundary Inputs
+
+- `docs/progress/openpi-integration-baseline.md`
+- `docs/progress/openpi-contract-glossary.md`
+
+This plan inherits these `ST-01` rules:
+
+- `src/openpi` owns semantic objects, `src/mint` owns service envelopes, `src/mindlab-toolkit` owns SDK naming and transport identity.
+- Cross-repo validation must verify both positive OpenPI behavior and negative non-pollution of existing Mint/Tinker-compatible paths.
+- Failure attribution must classify drift at the runtime, service, SDK or environment layer instead of collapsing everything into one “integration failed” bucket.
+
 ## Deliverables
 
 - `docs/progress/openpi-compatibility-matrix.md`

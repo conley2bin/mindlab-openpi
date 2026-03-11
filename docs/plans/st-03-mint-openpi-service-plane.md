@@ -10,6 +10,17 @@
 
 ---
 
+## Boundary Inputs
+
+- `docs/progress/openpi-integration-baseline.md`
+- `docs/progress/openpi-contract-glossary.md`
+
+This plan inherits these `ST-01` rules:
+
+- `src/mint` owns the service envelope, polling, auth and ops-visible metadata.
+- OpenPI semantic payloads come from `src/openpi`; Mint must not redefine them as token-only request types.
+- OpenPI routes and models stay in an explicit OpenPI service family and do not pollute existing Tinker-compatible `/api/v1` contracts.
+
 ## Existing Repo Anchors
 
 - `src/mint/tinker_server/app.py` 是当前 router registration 和 lifecycle assembly 入口。

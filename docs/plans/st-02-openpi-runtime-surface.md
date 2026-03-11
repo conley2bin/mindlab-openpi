@@ -10,6 +10,17 @@
 
 ---
 
+## Boundary Inputs
+
+- `docs/progress/openpi-integration-baseline.md`
+- `docs/progress/openpi-contract-glossary.md`
+
+This plan inherits these `ST-01` rules:
+
+- `src/openpi` owns OpenPI semantic objects and runtime truth.
+- Mint-facing runtime APIs must preserve observation/action/reset semantics rather than token-centric request shapes.
+- Service envelope, polling, auth and task orchestration stay out of `src/openpi`.
+
 ## Existing Repo Anchors
 
 - `src/openpi/src/openpi/policies/policy.py` 已经定义了 `infer(obs)`、`metadata` 和 JAX/PyTorch 双实现分支。
