@@ -45,9 +45,11 @@ OpenPI 接入不是单仓改动，而是三仓联动：
 - 明确区分三类验证信号：OpenPI 新能力可用、现有 Mint 主路径未回归、现有 Toolkit 兼容层未漂移。
 - 验证分层至少应包括：OpenPI runtime contract、Mint service contract、Toolkit namespace contract、跨仓端到端闭环。
 - 跨仓验证必须覆盖 OpenPI 特有的结构化 observation / action / multimodal payload，而不只是“请求能发出去、任务能轮询回来”。
+- 跨仓验证必须覆盖 `reset()` / episode boundary / action chunk 生命周期语义，否则最容易在“能 infer 一次”与“能稳定跑完整会话”之间留下空洞。
 - 兼容验证必须覆盖“现有 token-only 路径未被污染”这一反向信号，否则很容易只验证到新路径可用。
 - 让验证体系不仅覆盖“能否工作”，还覆盖“是否污染现有路径”。
 - 跨仓验证需要同时考虑版本组合与发布节奏，不能默认三仓永远以同一提交窗口联动发布。
+- 兼容矩阵至少应明确 Mint 当前承诺支持的 `pi0` 家族子集，例如 `pi0`、`pi0-fast`、`pi05` 中哪些进入首批闭环，避免文档说“pi0 系列”而验证只覆盖单一 checkpoint。
 - 持续集成策略应支持单仓自检与跨仓联调两类入口，否则兼容问题会在集成末端才暴露。
 - 为后续更广的 `pi0` 家族支持、更多训练模式、甚至更晚的 RL 扩展保留兼容演进机制。
 - 把验证与兼容策略作为长期机制维护，而不是上线前一次性补充。

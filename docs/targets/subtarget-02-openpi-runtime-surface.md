@@ -46,6 +46,7 @@
 - Mint 应依赖 `src/openpi` 提供的显式 integration-facing runtime surface，而不是直接绑定任意当前研究类、脚本入口或临时内部 helper。
 - 保持 `src/openpi` 作为模型与训练语义的唯一来源，避免 Mint 长期持有 OpenPI 私有逻辑副本。
 - 将 Mint 依赖的能力沉淀为库级 API，而不是依赖 CLI、example 或 websocket server 作为唯一入口。
+- `src/openpi` 需要为 Mint 暴露的是进程内 / 库级 integration API；现有 websocket serving 更接近 remote inference 工具与参考实现，不应自动升级成 Mint 的 canonical 外部服务契约。
 - 评估并明确 `src/openpi/packages/openpi-client`、`src/openpi/src/openpi/serving` 与后续 Mint 接入之间的复用边界，避免重复造客户端或运行时封装。
 - 让 LoRA、SFT、checkpoint 读写等已经存在于 OpenPI 内部的语义继续留在 `src/openpi` 侧收敛，而不是在 Mint 侧形成第二套适配语义。
 - 对外运行时接口需要明确调用模式、批处理能力边界、长任务状态语义与错误传播边界，但不在此阶段提前固化到具体传输协议。
@@ -83,6 +84,7 @@
 
 - Mint 侧如果需要新增 OpenPI 特定行为，应优先通过 `src/openpi` 新增或整理运行时接口，而不是在 `src/mint` 里复制模型细节。
 - OpenPI 的公开运行时接口应尽量围绕语义对象设计，而不是围绕单个脚本参数设计。
+- 如果后续仍保留 websocket server 路径，它应被视为 runtime surface 的一种适配器或调试入口，而不是 Mint 对外 API 设计的依据。
 - 推理先行是合理路径，但运行时接口不能只为单次推理做窄化设计，必须为后续监督式适配保留稳定扩展位。
 - OpenPI 内部错误哪些由 runtime 直接暴露、哪些由上层服务面转换，必须作为接口契约的一部分明确下来，不能留给服务端各自猜测。
 - 如果 Mint 需要 token 化、日志化或平台侧 metadata 封装，这些都应作为上层适配行为存在，不能反向定义 OpenPI runtime 的核心接口。

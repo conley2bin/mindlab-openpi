@@ -35,6 +35,7 @@
 - 但该 service schema 所包装的语义对象必须来自 `ST-02` 定义的 OpenPI runtime surface，而不是由 Mint 自行重新发明一套模型语义。
 - 因此，Mint 侧需要的是 OpenPI-specific service schema family，而不是对现有 Tinker-compatible schema 做局部修补。
 - “复用 Mint 基础设施”成立的前提是：复用 transport / orchestration / operations，而不是复用已经绑定 token-only 语义的 canonical request model。
+- 如果 Mint 在实现初期临时桥接 `src/openpi` 现有 websocket serving 或其他内部 adapter，该桥接也只是服务面内部实现细节，不应泄漏成 Mint 的长期外部 API 契约。
 
 ## Planned Direction
 
