@@ -37,12 +37,18 @@ What these gates do not cover:
 ### `src/mint`
 
 ```bash
-cd src/mint && pytest \
+cd src/mint && .venv/bin/pytest \
   tests/test_issue_136_config_file_validation.py \
   tests/test_model_registry_env_config.py \
   tests/test_gateway_multi_target_routing.py \
   tests/test_client_compat_user_agent.py \
-  tests/test_tinker_prompt_logprobs_semantics.py -q
+  tests/test_issue_281_scheduler_and_healthz.py \
+  tests/test_tinker_prompt_logprobs_semantics.py \
+  tests/test_openpi_app_registration.py \
+  tests/test_openpi_config_validation.py \
+  tests/test_openpi_service_contract.py \
+  tests/test_openpi_does_not_pollute_tinker_types.py \
+  tests/test_openpi_runtime_bridge.py -q
 ```
 
 What these gates cover:
@@ -51,13 +57,17 @@ What these gates cover:
 - model registry env overrides
 - gateway multi-target routing behavior
 - client user-agent compatibility logic
+- healthz and route labeling behavior
 - prompt logprobs semantics for the Tinker-compatible path
+- OpenPI config gate and app registration behavior
+- OpenPI schema isolation from token-only types
+- OpenPI inference runtime bridge and HTTP status mapping
 
 What these gates do not cover:
 
-- any OpenPI route
-- any OpenPI schema
-- any OpenPI runtime bridge
+- OpenPI artifact proxy
+- OpenPI training endpoints
+- toolkit namespace / SDK contract
 
 ### `src/mindlab-toolkit`
 
@@ -95,8 +105,8 @@ These are useful, but they are not hard gates for the first implementation pass.
 | --- | --- |
 | OpenPI integration facade tests | `src/openpi/src/openpi/integration/runtime_test.py`, `src/openpi/src/openpi/integration/artifacts_test.py`, `src/openpi/src/openpi/integration/training_test.py` |
 | OpenPI script adapter tests | `src/openpi/scripts/train_adapter_test.py`, `src/openpi/scripts/serve_policy_test.py` |
-| Mint OpenPI route and schema tests | missing |
-| Mint to OpenPI runtime bridge tests | missing |
+| Mint OpenPI route and schema tests | `src/mint/tests/test_openpi_app_registration.py`, `src/mint/tests/test_openpi_config_validation.py`, `src/mint/tests/test_openpi_service_contract.py`, `src/mint/tests/test_openpi_does_not_pollute_tinker_types.py` |
+| Mint to OpenPI runtime bridge tests | `src/mint/tests/test_openpi_runtime_bridge.py` |
 | Toolkit `mint.openpi.*` namespace tests | missing |
 | Toolkit OpenPI SDK contract tests | missing |
 | deterministic cross-repo closed loop | missing |
@@ -107,7 +117,7 @@ These are useful, but they are not hard gates for the first implementation pass.
 | Area | Positive signal | Negative signal |
 | --- | --- | --- |
 | OpenPI | deterministic runtime/artifact/training tests, script adapter tests and LoRA tests still pass after facade extraction | script adapters stop delegating or local training smoke breaks |
-| Mint | new OpenPI plane works without touching token-only types | old `/api/v1` path changes semantics or old tests need relaxed assertions |
+| Mint | OpenPI config gate, schema isolation and inference bridge pass without touching token-only types | old `/api/v1` path changes semantics, token-only types gain OpenPI fields, or new OpenPI path returns ambiguous HTTP errors |
 | Toolkit | `mint.openpi.*` imports and behaves as designed | top-level `mint.*` re-export or existing patch behavior changes |
 | Cross-repo | deterministic fake-runtime loop works end-to-end | failure cannot be localized to runtime vs service vs SDK |
 
