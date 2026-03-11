@@ -73,7 +73,7 @@
 | ID | Name | Status | Repos | Focus | Doc |
 | --- | --- | --- | --- | --- | --- |
 | ST-01 | Integration Boundaries And Contracts | drafted | `src/mint`, `src/openpi`, `src/mindlab-toolkit` | 固定长期边界、命名、协议定位与工件契约 | [subtarget-01-boundaries-and-contracts.md](./subtarget-01-boundaries-and-contracts.md) |
-| ST-02 | OpenPI Runtime Surface | drafted | `src/openpi` | 将脚本式能力整理为 Mint 可调用的稳定运行时接口 | [subtarget-02-openpi-runtime-surface.md](./subtarget-02-openpi-runtime-surface.md) |
+| ST-02 | OpenPI Runtime Surface | completed | `src/openpi` | 将脚本式能力整理为 Mint 可调用的稳定运行时接口 | [subtarget-02-openpi-runtime-surface.md](./subtarget-02-openpi-runtime-surface.md) |
 | ST-03 | Mint OpenPI Service Plane | drafted | `src/mint` | 在 Mint 内建立隔离的 OpenPI 服务平面与生命周期管理 | [subtarget-03-mint-openpi-service-plane.md](./subtarget-03-mint-openpi-service-plane.md) |
 | ST-04 | Mindlab Toolkit OpenPI SDK | drafted | `src/mindlab-toolkit` | 提供显式 `mint.openpi.*` 客户端能力并保持现有兼容层稳定 | [subtarget-04-mindlab-toolkit-openpi-sdk.md](./subtarget-04-mindlab-toolkit-openpi-sdk.md) |
 | ST-05 | Cross-Repo Validation And Compatibility | drafted | `src/mint`, `src/openpi`, `src/mindlab-toolkit` | 建立跨仓验证、兼容边界与后续演进机制 | [subtarget-05-cross-repo-validation-and-compatibility.md](./subtarget-05-cross-repo-validation-and-compatibility.md) |

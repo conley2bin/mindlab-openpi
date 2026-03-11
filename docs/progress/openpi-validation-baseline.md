@@ -7,19 +7,22 @@ Baseline date: 2026-03-12
 ### `src/openpi`
 
 ```bash
-cd src/openpi && uv run pytest src/openpi/models/model_test.py -q
-cd src/openpi && uv run pytest src/openpi/models/lora_test.py -q
-cd src/openpi && uv run pytest scripts/train_test.py -q
-cd src/openpi && uv run pytest src/openpi/integration/runtime_test.py -q
-cd src/openpi && uv run pytest src/openpi/integration/artifacts_test.py -q
-cd src/openpi && uv run pytest src/openpi/integration/training_test.py -q
-cd src/openpi && uv run pytest scripts/serve_policy_test.py -q
+cd src/openpi && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run pytest scripts/train_adapter_test.py -q
+cd src/openpi && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 JAX_PLATFORMS=cpu CUDA_VISIBLE_DEVICES='' uv run pytest scripts/train_test.py -q -s
+cd src/openpi && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 JAX_PLATFORMS=cpu CUDA_VISIBLE_DEVICES='' uv run pytest \
+  src/openpi/training/config_test.py \
+  src/openpi/integration/runtime_test.py \
+  src/openpi/integration/artifacts_test.py \
+  src/openpi/integration/training_test.py \
+  scripts/serve_policy_test.py \
+  src/openpi/models/lora_test.py -q
 ```
 
 What these gates cover:
 
-- local model creation and loss/sample behavior
 - local LoRA model surface
+- debug config guardrails in `src/openpi/training/config.py`
+- training script adapters delegating into `openpi.integration.training`
 - local JAX training smoke with `debug` config and resume path
 - deterministic inference facade contract
 - deterministic artifact path and norm stats contract
@@ -28,7 +31,8 @@ What these gates cover:
 
 What these gates do not cover:
 
-- real checkpoint inference
+- full PyTorch backend execution
+- real checkpoint model creation / inference
 - cross-repo contract
 ### `src/mint`
 
@@ -80,6 +84,7 @@ These are useful, but they are not hard gates for the first implementation pass.
 
 | Repo | Weak lane | Why weak |
 | --- | --- | --- |
+| `src/openpi` | `src/openpi/src/openpi/models/model_test.py` | 当前在本机 GPU 上 OOM；失败停在模型初始化阶段，不是 integration facade regression proof |
 | `src/openpi` | `src/openpi/src/openpi/policies/policy_test.py` | marked `manual`; depends on real checkpoint download and actual inference |
 | `src/openpi` | `src/openpi/src/openpi/shared/download_test.py` | depends on remote assets |
 | cross-repo | any future real checkpoint closed loop | not deterministic; mixes contract problems with resource/network problems |
@@ -89,6 +94,7 @@ These are useful, but they are not hard gates for the first implementation pass.
 | Layer | Current state |
 | --- | --- |
 | OpenPI integration facade tests | `src/openpi/src/openpi/integration/runtime_test.py`, `src/openpi/src/openpi/integration/artifacts_test.py`, `src/openpi/src/openpi/integration/training_test.py` |
+| OpenPI script adapter tests | `src/openpi/scripts/train_adapter_test.py`, `src/openpi/scripts/serve_policy_test.py` |
 | Mint OpenPI route and schema tests | missing |
 | Mint to OpenPI runtime bridge tests | missing |
 | Toolkit `mint.openpi.*` namespace tests | missing |
@@ -100,7 +106,7 @@ These are useful, but they are not hard gates for the first implementation pass.
 
 | Area | Positive signal | Negative signal |
 | --- | --- | --- |
-| OpenPI | deterministic runtime/artifact tests and LoRA tests still pass after facade extraction | script adapters stop working or local training smoke breaks |
+| OpenPI | deterministic runtime/artifact/training tests, script adapter tests and LoRA tests still pass after facade extraction | script adapters stop delegating or local training smoke breaks |
 | Mint | new OpenPI plane works without touching token-only types | old `/api/v1` path changes semantics or old tests need relaxed assertions |
 | Toolkit | `mint.openpi.*` imports and behaves as designed | top-level `mint.*` re-export or existing patch behavior changes |
 | Cross-repo | deterministic fake-runtime loop works end-to-end | failure cannot be localized to runtime vs service vs SDK |
@@ -119,6 +125,7 @@ Do not write “OpenPI integration failed” without this classification.
 ## Current Environment-Specific Failures
 
 - `src/openpi/src/openpi/models/model_test.py` 当前在本机 GPU 上失败于模型初始化阶段的 `RESOURCE_EXHAUSTED`。堆栈停在 `pi0` / `pi0_fast` model create，不经过 `openpi.integration.*`。
+- 当前环境直接跑 `pytest` 会被外部 ROS 插件污染 collection；`src/openpi` 验证需要显式设置 `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`。
 - 并发运行 `train_test.py` 与其他 JAX tests 会污染设备初始化状态，可能把原本可通过的 `lora_test.py` 拖成 CUDA backend init failure。当前 `src/openpi` 验证应串行执行。
 
 ## First Deterministic Closed-Loop Rule
