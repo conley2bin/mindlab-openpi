@@ -110,14 +110,18 @@ What this gate covers:
 
 - Mint OpenPI public status contract as consumed by Toolkit SDK
 - Toolkit SDK to Mint OpenPI service to fake OpenPI runtime closed loop
+- Toolkit SDK to Mint OpenPI artifact resolve and archive download closed loop
+- Toolkit SDK to Mint OpenPI training start and generic `retrieve_future` closed loop
 - structured observation/action payload across repo boundaries
+- Mint-owned artifact resolve summary and archive transport contract
+- Mint-owned async training future envelope and typed training result decode
 - lifecycle signal propagation via `reset_before_infer`
 
 What this gate does not cover:
 
 - real checkpoint model loading
 - live deployment networking
-- artifact or training end-to-end round-trips
+- real-asset artifact end-to-end round-trips
 
 ## Current Weak Lanes
 
