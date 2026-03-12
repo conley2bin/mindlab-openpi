@@ -19,7 +19,7 @@ Baseline date: 2026-03-12
 - 已有一条 deterministic fake-runtime closed loop，从 Toolkit SDK 到 Mint service 再到 fake OpenPI runtime，锚点是 `src/mint/tests/test_openpi_cross_repo_closed_loop.py`。
 - 已有 repo-owned compatibility matrix，见 `docs/progress/openpi-compatibility-matrix.md`。
 - 目前已经有 deterministic status + inference + artifact + training/future cross-repo closed loop，以及 localhost real-HTTP live-service smoke；real-asset exploratory 命令和 release discipline 也已经写入 progress docs。
-- `src/mint/tests/test_openpi_remote_deployment_smoke.py` 现在提供一条 env-driven remote deployment smoke：status 是最小 reachability signal；提供 checkpoint env 后可继续覆盖 artifact/archive；再提供 config/observation env 后可继续覆盖 service-hosted real-checkpoint infer。
+- `src/mint/tests/test_openpi_remote_deployment_smoke.py` 现在提供一条 env-driven remote deployment smoke：status 是最小 reachability signal；提供 checkpoint env 后可继续覆盖 artifact/archive；再提供 config/observation env 后可继续覆盖 service-hosted real-checkpoint infer。base URL、timeout 和 observation fixture 解析已固定成 environment gate；远端 HTTP response 失败与本地 SDK-side contract/decode failure 也已分开归因。
 - `src/openpi/docs/remote_inference.md` 与 `src/openpi/examples/*/compose.yml` 继续作为 upstream remote-serving 事实锚点；`src/mindlab-toolkit/README.md` 则固定了 `MINT_OPENPI_*` 远端入口的用户面，说明 `ST-08` 不是从零定义远端形状，而是在现有三仓材料上补验证和归因。
 - Mint 当前 OpenPI route family 已返回 `X-Mint-OpenPI-Negotiated-Capability`，Toolkit SDK 在 header 存在且 mismatch 时会 fail-fast，在 header 缺失时保持旧服务兼容。
 - 三仓现在都已经有 OpenPI-specific repo-local contract tests；缺口已经从 “有没有 live transport” 转移到 “是否继续扩展 remote deployment smoke、高成本 real checkpoint/manual lane，以及更细 capability contract”。
@@ -56,7 +56,7 @@ Baseline date: 2026-03-12
 - 当前 Toolkit SDK 既发送 request-side `X-Mint-OpenPI-Capability`，也会校验 Mint OpenPI route family 返回的 `X-Mint-OpenPI-Negotiated-Capability`；当 header 存在且 mismatch 时 fail-fast，当 header 缺失时保持旧服务兼容。
 - 当前 cross-repo closed loop 通过 service-hosted harness 固定在 `src/mint/tests/test_openpi_cross_repo_closed_loop.py`：Toolkit SDK 发起 status / infer / artifact / training 请求，Mint OpenPI route 包装服务层，fake runtime 返回 deterministic action，local checkpoint dir 提供 deterministic archive，fake future store 覆盖 training future 的 pending / failure / success 分支，并显式验证 status contract、artifact transport、training future envelope 与 `reset()` lifecycle signal。
 - 当前 localhost live-service smoke 也固定在 `src/mint/tests/test_openpi_live_service_smoke.py`：Toolkit SDK 通过真实 HTTP 请求触发 Mint 的 checkpoint URI 解析、persistent-cache materialization、artifact resolve 和 tar.gz archive stream，并验证 local checkpoint layout 的文件内容按服务端语义返回。
-- 当前 remote deployment smoke 入口已经固定在 `src/mint/tests/test_openpi_remote_deployment_smoke.py`：默认不运行，只有在显式设置远端 base URL 与 opt-in env 时才执行；status 是最小 smoke，artifact/archive 与 service-hosted real-checkpoint infer 依赖额外 env fixture。
+- 当前 remote deployment smoke 入口已经固定在 `src/mint/tests/test_openpi_remote_deployment_smoke.py`：默认不运行，只有在显式设置远端 base URL 与 opt-in env 时才执行；status 是最小 smoke，artifact/archive 与 service-hosted real-checkpoint infer 依赖额外 env fixture。base URL / timeout / observation env 解析失败属于 environment；远端 HTTP error response 不再被默认归到 `sdk`。
 - 首批 real-asset exploratory lane 以 `pi0_aloha_sim` 为代表，因为：
   - `src/openpi/src/openpi/policies/policy_test.py` 当前使用 `pi0_aloha_sim`
   - `src/openpi/scripts/serve_policy.py` 当前对 ALOHA simulator 的默认 checkpoint 也是 `pi0_aloha_sim`

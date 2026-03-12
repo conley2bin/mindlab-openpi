@@ -4,7 +4,7 @@
 
 **Goal:** 建立 localhost 之外的 remote deployment smoke 和服务托管 real-checkpoint validation layer，并把失败归因口径固定成可维护的制度。
 
-**Architecture:** 保留 deterministic repo-local / localhost lanes 为主 gate。新增的 remote deployment smoke 和 real-checkpoint lane 必须作为独立验证层存在，并显式区分 environment、deployment、runtime、service、SDK 五类失败来源。
+**Architecture:** 保留 deterministic repo-local / localhost lanes 为主 gate。新增的 remote deployment smoke 和 real-checkpoint lane 必须作为独立验证层存在，并显式区分 environment、deployment、runtime、service、SDK 五类失败来源；其中远端 HTTP error response 不应默认落到 `sdk`，`sdk` bucket 只用于本地 client-side decode / capability enforcement 失败。
 
 **Tech Stack:** FastAPI/HTTP clients, pytest, deployment-specific harness, Markdown
 
@@ -36,8 +36,9 @@
 1. 定义 remote deployment smoke 与 localhost smoke 的边界。
 2. 定义它需要覆盖的最小 OpenPI contract。
 3. 定义失败归因 bucket 和不可进入 hard gate 的条件。
-4. 落一条 env-driven remote smoke harness，默认不进 hard gate，只在显式 opt-in 时执行。
-5. 保证 remote smoke 继续复用 `src/openpi` 已有 remote-serving 语义和 Toolkit 已有 `MINT_OPENPI_*` 入口，不额外发明并行配置面。
+4. 固定 bucket 边界：environment 负责 env fixture 解析，deployment/runtime/service 负责远端 HTTP surface，SDK 只负责本地 client-side contract enforcement。
+5. 落一条 env-driven remote smoke harness，默认不进 hard gate，只在显式 opt-in 时执行。
+6. 保证 remote smoke 继续复用 `src/openpi` 已有 remote-serving 语义和 Toolkit 已有 `MINT_OPENPI_*` 入口，不额外发明并行配置面。
 
 ## Phase 2: Define Service-Hosted Real-Checkpoint Lane
 
