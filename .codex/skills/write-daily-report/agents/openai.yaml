@@ -1,4 +1,4 @@
 interface:
   display_name: "Write Daily Report"
-  short_description: "Draft daily reports from committed repo facts."
-  default_prompt: "Use $write-daily-report to draft today's professional and plain-language daily reports from committed repository facts."
+  short_description: "Draft one code-first daily report from commit-range bounded repo facts."
+  default_prompt: "Use $write-daily-report to draft today's daily report from the previous report boundary to current HEAD, or from a provided start commit. Keep the writing plain-language but concrete, use relative paths, avoid commit hashes in the body, avoid explicit section labels like 具体变更 or 剩余问题, avoid per-theme markdown headings, and start each theme block with a short summary clause followed by ： before the concrete details. Put verification only inside screenshot placeholders, prefer detailed pytest commands such as -vv -ra instead of -q, and separate adjacent theme blocks with blank lines plus a standalone --- rule."
