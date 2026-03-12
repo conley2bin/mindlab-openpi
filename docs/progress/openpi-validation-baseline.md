@@ -172,7 +172,7 @@ What this lane covers:
 - artifact resolve and archive download when `MINT_OPENPI_REMOTE_CHECKPOINT_URI` is provided
 - service-hosted real-checkpoint infer when `MINT_OPENPI_REMOTE_CHECKPOINT_URI`、`MINT_OPENPI_REMOTE_CONFIG_NAME` and `MINT_OPENPI_REMOTE_OBSERVATION_JSON` are all provided
 - explicit failure bucket prefixes in test failures: `environment`, `deployment`, `runtime`, `service`, `sdk`
-- once `MINT_OPENPI_REMOTE_SMOKE=1`, missing or non-absolute `MINT_OPENPI_REMOTE_BASE_URL`, and malformed / non-finite `MINT_OPENPI_REMOTE_TIMEOUT_S`, are treated as `environment` failures instead of silent skips
+- once `MINT_OPENPI_REMOTE_SMOKE=1`, missing or non-absolute `MINT_OPENPI_REMOTE_BASE_URL`, malformed / non-finite `MINT_OPENPI_REMOTE_TIMEOUT_S`, and malformed / non-object `MINT_OPENPI_REMOTE_OBSERVATION_JSON`, are treated as `environment` failures instead of silent skips
 
 What this lane does not cover:
 
