@@ -23,6 +23,9 @@
 - `subtarget-03-*.md` 对应 `ST-03`
 - `subtarget-04-*.md` 对应 `ST-04`
 - `subtarget-05-*.md` 对应 `ST-05`
+- `subtarget-06-*.md` 对应 `ST-06`
+- `subtarget-07-*.md` 对应 `ST-07`
+- `subtarget-08-*.md` 对应 `ST-08`
 
 `subtarget-xx` 是目标文档文件名前缀，`ST-xx` 是在目标表、方案文档、进度文档里引用同一子目标时使用的短标识。
 

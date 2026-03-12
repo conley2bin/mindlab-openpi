@@ -76,7 +76,10 @@
 | ST-02 | OpenPI Runtime Surface | completed | `src/openpi` | 将脚本式能力整理为 Mint 可调用的稳定运行时接口 | [subtarget-02-openpi-runtime-surface.md](./subtarget-02-openpi-runtime-surface.md) |
 | ST-03 | Mint OpenPI Service Plane | completed | `src/mint` | 在 Mint 内建立隔离的 OpenPI 服务平面与生命周期管理 | [subtarget-03-mint-openpi-service-plane.md](./subtarget-03-mint-openpi-service-plane.md) |
 | ST-04 | Mindlab Toolkit OpenPI SDK | completed | `src/mindlab-toolkit` | 提供显式 `mint.openpi.*` 客户端能力并保持现有兼容层稳定 | [subtarget-04-mindlab-toolkit-openpi-sdk.md](./subtarget-04-mindlab-toolkit-openpi-sdk.md) |
-| ST-05 | Cross-Repo Validation And Compatibility | completed | `src/mint`, `src/openpi`, `src/mindlab-toolkit` | 建立跨仓验证、兼容边界与后续演进机制 | [subtarget-05-cross-repo-validation-and-compatibility.md](./subtarget-05-cross-repo-validation-and-compatibility.md) |
+| ST-05 | Cross-Repo Validation And Compatibility | completed | `src/mint`, `src/openpi`, `src/mindlab-toolkit` | 建立 deterministic 跨仓验证和兼容基线 | [subtarget-05-cross-repo-validation-and-compatibility.md](./subtarget-05-cross-repo-validation-and-compatibility.md) |
+| ST-06 | Operational Hardening And Release Discipline | completed | `src/mint`, `src/openpi`, `src/mindlab-toolkit` | 补齐 live-service smoke、real-asset lane 与 repo/version release discipline | [subtarget-06-operational-hardening-and-release-discipline.md](./subtarget-06-operational-hardening-and-release-discipline.md) |
+| ST-07 | Capability Negotiation And Skew Detection | completed | `src/mint`, `src/mindlab-toolkit` | 补上 response-side capability signal 与 SDK 侧 skew detection | [subtarget-07-capability-negotiation-and-skew-detection.md](./subtarget-07-capability-negotiation-and-skew-detection.md) |
+| ST-08 | Remote Deployment And Real-Checkpoint Validation | in_progress | `src/mint`, `src/openpi`, `src/mindlab-toolkit` | 建立 localhost 之外的部署验证层与高成本 real-checkpoint 归因面 | [subtarget-08-remote-deployment-and-real-checkpoint-validation.md](./subtarget-08-remote-deployment-and-real-checkpoint-validation.md) |
 
 ## Dependency Notes
 
@@ -84,3 +87,6 @@
 - `ST-02` 和 `ST-03` 共同构成服务端能力核心，但 `ST-02` 应优先于大规模服务端落地。
 - `ST-04` 依赖 `ST-02` 与 `ST-03` 的稳定接口，不应提前固化用户接口。
 - `ST-05` 贯穿整个主线，用于避免 OpenPI 接入过程侵蚀现有 Mint 路径。
+- `ST-06` 依赖 `ST-03` 到 `ST-05` 已经落地的 deterministic surface，用于把“结构正确”推进到“真实 HTTP 可验证、版本组合可维护”。
+- `ST-07` 依赖 `ST-04` 与 `ST-06`，用于把单侧 request identity 扩成双侧 capability contract，并把 skew detection 从文档约束推进到代码约束。
+- `ST-08` 依赖 `ST-06` 与 `ST-07`，用于把 localhost deterministic / low-cost lane 之外的远端部署与 real-checkpoint 高成本验证正式分层。

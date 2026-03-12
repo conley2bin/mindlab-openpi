@@ -24,6 +24,9 @@
 - `st-03-*.md`
 - `st-04-*.md`
 - `st-05-*.md`
+- `st-06-*.md`
+- `st-07-*.md`
+- `st-08-*.md`
 
 这些文件名分别对应：
 
@@ -32,6 +35,9 @@
 - `ST-03` / `docs/targets/subtarget-03-*.md`
 - `ST-04` / `docs/targets/subtarget-04-*.md`
 - `ST-05` / `docs/targets/subtarget-05-*.md`
+- `ST-06` / `docs/targets/subtarget-06-*.md`
+- `ST-07` / `docs/targets/subtarget-07-*.md`
+- `ST-08` / `docs/targets/subtarget-08-*.md`
 
 ## Rules
 

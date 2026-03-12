@@ -4,7 +4,7 @@
 
 **Goal:** 建立一套持续有效的跨仓验证机制，既能证明 OpenPI 新路径可用，也能证明现有 Mint/Tinker-compatible 路径没有被污染。
 
-**Architecture:** `ST-05` 不是最后补的测试清单，而是从第一天就生效的 gating policy。先写 compatibility matrix 和 repo-local gate 分类，再让 `ST-02`、`ST-03`、`ST-04` 各自补本地 contract tests，最后才组装跨仓最小闭环。真实 checkpoint 和 manual lane 只能作为后置验证，不应充当唯一证明。
+**Architecture:** `ST-05` 不是最后补的测试清单，而是从第一天就生效的 deterministic gating policy。先写 compatibility matrix 和 repo-local gate 分类，再让 `ST-02`、`ST-03`、`ST-04` 各自补本地 contract tests，最后组装 fake-runtime closed loop。localhost real-HTTP smoke、real checkpoint/manual lane 和 repo/version release discipline 转入 `ST-06`，不再塞进 `ST-05` 已完成范围。
 
 **Tech Stack:** Markdown, pytest, `uv`, repo-local test suites, CI workflows
 
@@ -149,47 +149,25 @@ cd src/mindlab-toolkit && pytest \
 
 - 跨仓最小闭环可在本地跑通，不依赖外网和大模型 checkpoint。
 
-## Phase 5: Add Real-Asset And Manual Validation As A Separate Lane
+## Phase 5: Handoff Operational Validation And Release Discipline To ST-06
 
-**Exploratory Commands**
+`ST-05` 的完成边界停在 deterministic repo-local gates 和 fake-runtime closed loop。下面这些工作显式移交给 `ST-06`：
 
-```bash
-cd src/openpi && uv run pytest --strict-markers -m "manual" src/openpi/policies/policy_test.py
-cd src/openpi && uv run pytest src/openpi/shared/download_test.py -q
-```
-
-**Steps**
-
-1. 在 repo-local 和 fake-runtime closed-loop 稳定后，再补真实 checkpoint/manual lane。
-2. 真实资源验证写入 matrix 和 baseline，但不替代本地 deterministic lane。
-3. 如果真实 checkpoint lane 失败，先判定是 network/resource 问题还是 contract drift，不允许直接写成 “OpenPI 集成失败”。
-
-## Phase 6: Wire CI And Release Discipline
-
-**Create Or Modify**
-
-- `src/openpi/.github/workflows/test.yml`
-- `src/mint/.github/workflows/test.yml`
-- `src/mindlab-toolkit/.github/workflows/test.yml`
-- `docs/progress/openpi-compatibility-matrix.md`
-
-**Steps**
-
-1. 维持 `openpi` 现有 `not manual` CI lane。
-2. 为 Mint 和 Toolkit 创建等价的 repo-local hard-gate workflow，至少覆盖现有 regression anchors 和新增 OpenPI contract tests。
-3. root-level cross-repo workflow 只有在 harness ownership 已经明确后才引入；它不属于默认前提。
-4. 每次 capability 或 version 组合变化时，先更新 matrix，再更新代码和 release notes。
-5. 明确支持的 repo/version 组合；不要默认三仓永远同日发布。
+- localhost real-HTTP live-service smoke
+- real checkpoint/manual lane
+- Mint、Toolkit 与 cross-repo repo/version release discipline
+- capability/version skew detection 的前置条件梳理
 
 ## Exit Criteria
 
 - compatibility matrix 和 validation baseline 存在并持续维护。
 - 三仓各自有 must-pass local contract tests。
 - 存在一条 deterministic、无外网依赖的 cross-repo minimal closed loop。
-- 真实 checkpoint/manual lane 与 deterministic lane 被明确区分。
+- localhost real-HTTP smoke、真实 checkpoint/manual lane 与 release discipline 不再作为 `ST-05` 未完成事项残留，而是进入 `ST-06`。
 
 ## Not In This Plan
 
 - 具体 runtime/service/sdk feature implementation
 - 大规模性能压测
 - RL 全量验证矩阵
+- localhost real-HTTP smoke、real-asset/manual lane、repo/version release discipline

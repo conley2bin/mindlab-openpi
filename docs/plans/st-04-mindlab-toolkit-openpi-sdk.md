@@ -135,9 +135,11 @@ cd src/mindlab-toolkit && python -m pytest \
 1. `types.py` 反映 `ST-03` 的 OpenPI service schema，而不是复制 `tinker` token types。
 2. `client.py` 只封装 Mint OpenPI service surface，不复制 OpenPI runtime logic。
 3. `mint.openpi` 先暴露最小 stable surface:
+   - public status probe
    - inference call
-   - task/future query
-4. training methods 和 artifact query 等到 `ST-03` 对应服务面稳定后再暴露，不提前占位。
+   - artifact resolve and archive download
+   - training start and generic future query
+4. `mint.openpi` 当前 stable surface 只消费 `ST-03` 已经稳定的 OpenPI route family；live-service smoke 和 release/version discipline 转入 `ST-06`。
 
 **Commands**
 
@@ -151,7 +153,7 @@ cd src/mindlab-toolkit && pytest \
 
 - `mint.openpi` 的 public names 体现 OpenPI observation/action 语义，不模仿 `SamplingClient`。
 - SDK 只依赖 Mint service contract，不直接依赖 `src/openpi` 内部实现。
-- SDK 首个 stable surface 只依赖 `ST-03` 已经落地的 inference path 和 task/future query path。
+- SDK 首个 stable surface 依赖 `ST-03` 已经落地的 public status、inference、artifact 和 training/future path。
 
 ## Phase 4: Keep Patch Side Effects Contained
 
@@ -194,6 +196,7 @@ cd src/mindlab-toolkit && pytest \
 - Toolkit 内存在显式 `mint.openpi` package。
 - 新 SDK 不改变现有 `mint.*` / `mint.tinker.*` contract。
 - `pyproject.toml` 已处理 transport dependency，而不是把 SDK 实现悬空。
+- localhost real-HTTP smoke 与 repo/version release discipline 不属于本计划收尾，转入 `ST-06`。
 
 ## Not In This Plan
 

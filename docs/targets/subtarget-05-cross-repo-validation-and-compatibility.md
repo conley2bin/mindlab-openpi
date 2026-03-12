@@ -6,7 +6,7 @@
 
 ## Objective
 
-建立 OpenPI 接入 Mint 的跨仓验证、兼容边界与演进机制，确保新能力可以持续推进，同时不破坏现有 Mint 模型路径和当前 SDK 兼容承诺。
+建立 OpenPI 接入 Mint 的 deterministic 跨仓验证、兼容边界与首批演进机制，确保新能力可以持续推进，同时不破坏现有 Mint 模型路径和当前 SDK 兼容承诺。
 
 ## Why This Exists
 
@@ -36,6 +36,7 @@ OpenPI 接入不是单仓改动，而是三仓联动：
 - `src/mindlab-toolkit/tests/test_namespace_contract.py` 与 `test_mint_polling_patch.py` 说明 Toolkit 最脆弱的点是外部契约漂移，而不是内部算法正确性。
 - `docs/progress/openpi-{compatibility-matrix,validation-baseline,integration-baseline,contract-glossary}.md` 现在已经形成 current-truth / gate / ownership 文档面，说明跨仓验证不再只是目标，而是已落地的维护对象。
 - `src/mint/tests/test_openpi_cross_repo_closed_loop.py` 现在已经提供 fake-runtime deterministic closed loop，说明跨仓最小闭环已有 concrete harness，而不是停留在设计阶段。
+- `src/mint/tests/test_openpi_live_service_smoke.py` 现在已经补上 localhost real-HTTP smoke，说明后续缺口已经从“有没有 live transport”缩小到“真实资产 lane 和 release discipline 是否被制度化”。
 
 ## Planned Direction
 
@@ -55,6 +56,7 @@ OpenPI 接入不是单仓改动，而是三仓联动：
 - 持续集成策略应支持单仓自检与跨仓联调两类入口，否则兼容问题会在集成末端才暴露。
 - 为后续更广的 `pi0` 家族支持、更多训练模式、甚至更晚的 RL 扩展保留兼容演进机制。
 - 把验证与兼容策略作为长期机制维护，而不是上线前一次性补充。
+- `ST-05` 的完成态限定为 deterministic repo-local gate、service-hosted fake-runtime closed loop 和 localhost live-service smoke；真实 checkpoint/manual lane、repo/version release discipline 与 capability negotiation 前置条件转入 `ST-06`。
 
 ## Expected Outcomes
 
@@ -79,7 +81,7 @@ OpenPI 接入不是单仓改动，而是三仓联动：
 
 ### Downstream
 
-- 无
+- `ST-06 Operational Hardening And Release Discipline`
 
 ## Guidance For Later Subtargets
 
@@ -88,3 +90,4 @@ OpenPI 接入不是单仓改动，而是三仓联动：
 - 未来如果需要纳入 RL 或更复杂训练流程，也应优先扩展本子目标下的兼容机制，而不是跳过它。
 - 如果某次变更只能通过放宽现有 Tinker-compatible 测试断言才能通过，应先把它视为路径污染风险，而不是默认接受的新兼容行为。
 - 后续若要扩跨仓 capability/version 协商或 live-service smoke，应先把它明确纳入 deterministic lane 之外的新验证层，不要倒退成“只有手工联调能发现兼容问题”。
+- 真实 checkpoint/manual lane、repo/version workflow 和发布纪律属于 `ST-06`，不应继续塞回 `ST-05` 已完成的 deterministic baseline 范围。

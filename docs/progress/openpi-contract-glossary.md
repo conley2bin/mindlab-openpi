@@ -18,7 +18,9 @@ Glossary date: 2026-03-12
 | artifact reference | 指向 OpenPI artifact 的稳定引用对象或服务侧请求对象，例如 checkpoint URI、artifact resolve request/response。 | semantic meaning: `src/openpi`; service envelope: `src/mint`; SDK decode shape: `src/mindlab-toolkit` | 允许跨仓传递，但不允许三仓各自定义不同的 canonical meaning。 |
 | checkpoint | 可用于恢复 inference 或 training state 的权重产物。 | `src/openpi` | 现有 Mint `mint://` / `tinker://` 路径只是服务侧 URI/envelope，不等于 OpenPI checkpoint truth。 |
 | run uri | Mint service 与 Toolkit SDK 用于标识 OpenPI training run 的服务侧 URI，例如 `mint://openpi/<config>/<exp>`。 | `src/mint` for URI/envelope shape; `src/mindlab-toolkit` for SDK decode | 它是服务 contract，不是 OpenPI runtime 内部对象。 |
-| client transport identity | SDK 发向 Mint service 时使用的 transport-level identity，例如 `User-Agent`、auth header、capability header、base URL 与 timeout policy。 | `src/mindlab-toolkit` | 不能无意复用现有 `Mint/Python ...` / Tinker-compatible identity 去触发 `src/mint/tinker_server/client_compat.py` 旧分支；当前 capability header 只是一侧 request identity，不是服务端已协商的 response contract。 |
+| client transport identity | SDK 发向 Mint service 时使用的 request-side transport identity，例如 `User-Agent`、auth header、request capability header、base URL 与 timeout policy。 | `src/mindlab-toolkit` | 不能无意复用现有 `Mint/Python ...` / Tinker-compatible identity 去触发 `src/mint/tinker_server/client_compat.py` 旧分支；它只描述客户端声明，不等于服务端已协商结果。 |
+| negotiated capability signal | Mint OpenPI service 在 response header 中回传的当前 capability/version，例如 `X-Mint-OpenPI-Negotiated-Capability: 0.1`。 | response contract: `src/mint`; client validation: `src/mindlab-toolkit` | 它不是 SDK 自己发出的 request identity；它表示服务端实际回传的协商结果。 |
+| capability skew detection | SDK 在看到 negotiated capability signal 后，把 client expectation 和 server actual value 做 fail-fast 比较。 | `src/mindlab-toolkit` | 当前策略是 “header present 则比较，header absent 则兼容”，不是要求所有历史服务立即升级。 |
 | future | Mint service 用于异步任务轮询的 request id 与 retrieve contract。 | `src/mint` | 这是 service orchestration object，不是 OpenPI runtime semantic object。 |
 | session | Mint 当前的通用服务端会话概念。 | `src/mint` | 不能默认等于 OpenPI episode。 |
 | sampling session | Mint 当前 token-centric sampling lifecycle object。 | `src/mint` | 不能拿来直接表示 OpenPI policy lifecycle。 |
@@ -35,6 +37,7 @@ Glossary date: 2026-03-12
 - `src/openpi` 定义 OpenPI semantic objects 和 runtime truth。
 - `src/mint` 定义 service envelope、ops surface、polling、task orchestration。
 - `src/mindlab-toolkit` 定义用户可见 naming、client ergonomics 和 package-level dependency choices。
+- `src/mint` 拥有 response-side negotiated capability signal，`src/mindlab-toolkit` 拥有 request-side transport identity 和 skew detection。
 - `docs/progress/openpi-integration-baseline.md` 与 `docs/progress/openpi-validation-baseline.md` 记录 current truth、gate 分类和跨仓归因口径，但不拥有 semantic object definition。
 
 ## Naming Rules

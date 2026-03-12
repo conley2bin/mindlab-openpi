@@ -67,6 +67,7 @@ What these gates cover:
 - OpenPI config gate and app registration behavior
 - OpenPI schema isolation from token-only types
 - OpenPI inference runtime bridge and HTTP status mapping
+- OpenPI response-side negotiated capability header on status and infer routes
 - OpenPI artifact resolve/archive contract and checkpoint reference restrictions
 - OpenPI training start async envelope, FutureStore queueing semantics and Mint-owned run/checkpoint URI mapping
 
@@ -79,7 +80,7 @@ What these gates do not cover:
 ### `src/mindlab-toolkit`
 
 ```bash
-cd src/mindlab-toolkit && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run python -m pytest \
+cd src/mindlab-toolkit && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run --with pytest python -m pytest \
   tests/test_namespace_contract.py \
   tests/test_mint_polling_patch.py \
   tests/test_openpi_namespace_contract.py \
@@ -92,6 +93,7 @@ What these gates cover:
 - current patch side effects for the Tinker-compatible layer
 - explicit `mint.openpi.*` namespace contract
 - OpenPI SDK config, distinct client identity, Mint OpenPI request envelopes, current Mint status payload decoding and future payload mapping
+- fail-fast on mismatched negotiated capability header while keeping header-missing services compatible
 
 What these gates do not cover:
 
@@ -112,6 +114,7 @@ What this gate covers:
 - Toolkit SDK to Mint OpenPI service to fake OpenPI runtime closed loop
 - Toolkit SDK to Mint OpenPI artifact resolve and archive download closed loop
 - Toolkit SDK to Mint OpenPI training start and generic `retrieve_future` closed loop
+- current negotiated capability match path across Mint OpenPI routes as consumed by Toolkit SDK
 - structured observation/action payload across repo boundaries
 - Mint-owned artifact resolve summary and archive transport contract
 - Mint-owned async training future pending / failure / success envelope and typed training result decode
@@ -122,6 +125,84 @@ What this gate does not cover:
 - real checkpoint model loading
 - live deployment networking
 - real-asset artifact end-to-end round-trips
+
+### Cross-repo localhost live-service smoke
+
+```bash
+cd src/mint && .venv/bin/pytest \
+  tests/test_openpi_live_service_smoke.py -q
+```
+
+What this gate covers:
+
+- Toolkit SDK to Mint OpenPI service over real localhost TCP transport
+- public status and inference over actual HTTP instead of in-process ASGI transport
+- artifact resolve plus archive download over actual HTTP
+- service-hosted checkpoint reference resolution, persistent-cache materialization and local checkpoint-layout tar.gz round-trip
+- training start plus retrieve_future over actual HTTP, including background task scheduling
+- current negotiated capability match path over live HTTP for Mint OpenPI routes
+
+What this gate does not cover:
+
+- real checkpoint model loading
+- deployed-service networking outside localhost
+- remote asset download or manual real-checkpoint inference
+
+### Cross-repo remote deployment smoke
+
+```bash
+cd src/mint && \
+  MINT_OPENPI_REMOTE_SMOKE=1 \
+  MINT_OPENPI_REMOTE_BASE_URL=https://<deployment-host> \
+  .venv/bin/pytest tests/test_openpi_remote_deployment_smoke.py -q
+```
+
+Optional env for deeper coverage:
+
+- `MINT_OPENPI_REMOTE_API_KEY`
+- `MINT_OPENPI_REMOTE_TIMEOUT_S`
+- `MINT_OPENPI_REMOTE_CHECKPOINT_URI`
+- `MINT_OPENPI_REMOTE_CONFIG_NAME`
+- `MINT_OPENPI_REMOTE_OBSERVATION_JSON`
+
+What this lane covers:
+
+- Toolkit SDK to deployed Mint OpenPI service outside localhost
+- public status as the minimum remote deployment reachability signal
+- artifact resolve and archive download when `MINT_OPENPI_REMOTE_CHECKPOINT_URI` is provided
+- service-hosted real-checkpoint infer when `MINT_OPENPI_REMOTE_CHECKPOINT_URI`、`MINT_OPENPI_REMOTE_CONFIG_NAME` and `MINT_OPENPI_REMOTE_OBSERVATION_JSON` are all provided
+- explicit failure bucket prefixes in test failures: `environment`, `deployment`, `runtime`, `service`, `sdk`
+
+What this lane does not cover:
+
+- deterministic regression proof
+- deployment-owned secret provisioning or base URL discovery
+- promotion to hard gate without a stable environment owner
+
+## Real-Asset Exploratory Lane
+
+```bash
+cd src/openpi && uv run pytest --strict-markers -m "manual" src/openpi/policies/policy_test.py -q
+cd src/openpi && uv run pytest src/openpi/shared/download_test.py -q
+```
+
+What this lane covers:
+
+- `pi0_aloha_sim` real checkpoint policy creation and inference semantics
+- remote asset download and checkpoint materialization paths inside `src/openpi`
+
+What this lane requires:
+
+- external network access
+- enough device memory for real checkpoint load
+- explicit acceptance of `manual` coverage
+
+How to read failures:
+
+- download failure or asset lookup failure: environment or remote asset problem first
+- model init `RESOURCE_EXHAUSTED`: environment capacity problem first
+- payload shape drift after model load: likely `src/openpi` runtime regression
+- service or SDK mismatch after a successful real checkpoint load: outside this lane; escalate to `src/mint` or `src/mindlab-toolkit`
 
 ## Current Weak Lanes
 
@@ -145,10 +226,13 @@ These are useful, but they are not hard gates for the first implementation pass.
 | Mint OpenPI async training contract tests | `src/mint/tests/test_openpi_training_contract.py` |
 | Toolkit `mint.openpi.*` namespace tests | `src/mindlab-toolkit/tests/test_openpi_namespace_contract.py` |
 | Toolkit OpenPI SDK contract tests | `src/mindlab-toolkit/tests/test_openpi_sdk_contract.py` |
-| Toolkit to Mint live service smoke | missing |
+| Toolkit to Mint live service smoke | `src/mint/tests/test_openpi_live_service_smoke.py` |
+| Toolkit to deployed Mint remote smoke | `src/mint/tests/test_openpi_remote_deployment_smoke.py` |
 | deterministic cross-repo closed loop | `src/mint/tests/test_openpi_cross_repo_closed_loop.py` |
-| cross-repo live-service smoke | missing |
-| release matrix by repo/version combination | missing |
+| cross-repo live-service smoke | `src/mint/tests/test_openpi_live_service_smoke.py` |
+| cross-repo remote deployment smoke | `src/mint/tests/test_openpi_remote_deployment_smoke.py` |
+| release matrix by repo/version combination | documented in `docs/progress/openpi-compatibility-matrix.md` |
+| service-hosted local checkpoint-layout round-trip | `src/mint/tests/test_openpi_live_service_smoke.py` |
 
 ## Positive And Negative Signals To Preserve
 
@@ -174,8 +258,15 @@ Do not write “OpenPI integration failed” without this classification.
 
 - `src/openpi/src/openpi/models/model_test.py` 当前在本机 GPU 上失败于模型初始化阶段的 `RESOURCE_EXHAUSTED`。堆栈停在 `pi0` / `pi0_fast` model create，不经过 `openpi.integration.*`。
 - 当前环境直接跑 `pytest` 会被外部 ROS 插件污染 collection；`src/openpi` 和 `src/mindlab-toolkit` 验证都需要显式设置 `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`。
+- `src/mindlab-toolkit` 的 `uv sync` 默认不会安装 `pytest`；干净环境下运行 Toolkit hard gate 需要显式使用 `uv run --with pytest ...`。
 - 并发运行 `train_test.py` 与其他 JAX tests 会污染设备初始化状态，可能把原本可通过的 `lora_test.py` 拖成 CUDA backend init failure。当前 `src/openpi` 验证应串行执行。
 - `src/mindlab-toolkit` 当前 `uv run` 默认拉起 CPython 3.14.2，`tinker` 会发出 “Pydantic V1 functionality isn't compatible with Python 3.14 or greater” warning。当前 Toolkit tests 可通过，但这不是 Python 3.14 clean-support 证明。
+
+## Current Release Discipline
+
+- 当前 release identity tuple 见 `docs/progress/openpi-compatibility-matrix.md`。
+- 改 OpenPI contract 时，先更新 progress docs，再更新 owning repo tests，再更新代码。
+- 当前 `src/openpi`、`src/mindlab-toolkit` 和 `src/mint` 都已有 repo-native workflow；本文件保留本地命令作为复现实验和故障归因入口。
 
 ## First Deterministic Closed-Loop Rule
 
