@@ -44,6 +44,7 @@ cd src/mint && .venv/bin/pytest \
   tests/test_client_compat_user_agent.py \
   tests/test_issue_190_checkpoint_archive_auth_signed_url.py \
   tests/test_issue_218_gateway_checkpoint_proxy.py \
+  tests/tests_mock_api_work_queue_scheduler.py \
   tests/test_issue_281_scheduler_and_healthz.py \
   tests/test_tinker_prompt_logprobs_semantics.py \
   tests/test_openpi_app_registration.py \
@@ -62,6 +63,7 @@ What these gates cover:
 - gateway multi-target routing behavior
 - client user-agent compatibility logic
 - checkpoint archive auth and checkpoint proxy regressions around existing paths
+- detached `api_work_queue` scheduler semantics, stale dequeue wake-up on `active_job_id` change, and control-plane concurrency headroom above worker count
 - healthz and route labeling behavior
 - prompt logprobs semantics for the Tinker-compatible path
 - OpenPI config gate and app registration behavior
@@ -179,6 +181,20 @@ What this lane does not cover:
 - deterministic regression proof
 - deployment-owned secret provisioning or base URL discovery
 - promotion to hard gate without a stable environment owner
+
+### Mint Dev Operational Facts
+
+- `mint-dev` 是 dev driver host，不是 GPU worker 的同义词；`nvidia-smi` 无本地 GPU 不能推出 Ray dev cluster 无 GPU worker。
+- `mint-dev` 上 server liveness 需要单独检查，不能从 cluster 状态反推。2026-03-13 同时观测到过 `curl http://localhost:8000/api/v1/healthz` 的 `connection refused`，也观测到过 restart 验证后的 `200 {"status":"ready"}`；后续判断必须直接探测当前 server 进程和 HTTP 结果。
+- `ray.init(address="auto")` 在 `mint-dev` 上可能指向 stale head；当前已观测到一个不可达旧地址 `192.168.37.7:6379` 与一个可达显式 head 地址 `192.168.37.134:6379` 并存，后续运维动作必须先验证当前活跃 head，再设 `RAY_ADDRESS=<head_ip>:6379`。
+- `mint-dev` 默认 `python3` 是 `3.12.12`，与当前 shared Ray cluster 的 `Python 3.12.13` 不匹配；当前可用的 conley-owned runtime 在 `/vePFS-Mindverse/share/code/conley/tinker-server/.python-3.12.13` 与 `/vePFS-Mindverse/share/code/conley/tinker-server/.venv31213`。
+- `mint-dev` 上 host-local driver 和 `run_server.py` 需要先让本地 CPU-only raylet 加入 shared head；2026-03-13 验证通过的本地 node IP 是 `192.168.33.174`，而 `9.36.26.252` 会因为 missed heartbeats 被 GCS 判死。
+- 当前 `volc ml_task` 入口不统一：`mint-dev` 上 `ml_task` 会因为缺失 `mlp` helper 失败，本地 repo host 也没有可直接使用的 `volc`；cluster discovery 目前需要 Volcano console 或另一个已配置 CLI host。
+- code sync 的主动端在本机 Unison daemon，不在 `mint-dev`。`/root/tinker_project/tinker-server` 通常是指向 per-user PFS tree 的 symlink，远端 PFS tree 没有 `.git` 属于预期；`ssh mint-dev` 登陆用户是 `root`，远端 `$USER` 不能作为 PFS owner 的判断依据。
+- `GET /api/v1/healthz -> 200 {"status":"ready"}` 不能证明 detached `tinker_api_work_queue` healthy；当前最短验证链是 `/api/v1/healthz`、`/internal/work_queue/debug_state`、`/internal/work_queue/noop` 和 `/api/v1/retrieve_future`。
+- 当前 `tinker_server.backend.api_work_queue` 的有效约束是：detached actor 的 control-plane concurrency 必须高于 `api_work_queue_num_workers`，`active_job_id` 变更时要唤醒 stale `dequeue` waiters，而且 `_get_or_create_ray_actor()` 只会复用 `stats().protocol_version` 与当前代码一致的 named actor。
+- 2026-03-13 在 `mint-dev` 上，旧 detached actor `c0f9c6115f011ddbdc48ef10bc030000` 在第一次 server-only restart 时被自动回收并替换成新 actor `1be8226feb5c80fb7c29a5aeda030000`；随后连续两次只重启 server，actor id 保持不变，`active_job_id` 从 `de030000` 继续推进到 `e1030000`，`healthz`、`debug_state`、`noop` 和 `retrieve_future` 持续通过。
+- 主仓库 `.codex/skills/{mint-dev,volcano-cluster,mint-sync-unison,ray-namespace-isolation}` 现在作为这组运维约束的 canonical agent entry；`src/mint/.claude/skills/*` 继续保留参考价值，但不再是主仓库工作流唯一入口。
 
 ## Real-Asset Exploratory Lane
 

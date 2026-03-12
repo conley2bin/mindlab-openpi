@@ -1,0 +1,58 @@
+# Ray worker template for Mint dev.
+# Replace:
+# - `<TASK_NAME>`
+# - `<RAY_HEAD_IP>`
+# - `<GPU_QUEUE_ID>`
+# - `<PFS_TINKER_PATH>`
+
+TaskName: "<TASK_NAME>"
+Description: "Mint dev Ray GPU worker"
+
+Entrypoint: |
+  export HF_HUB_OFFLINE=1
+  export HF_HOME=/vePFS-Mindverse/share/huggingface
+  export PYTHONDONTWRITEBYTECODE=1
+
+  rm -rf /root/tinker_project/tinker-server
+  mkdir -p /root/tinker_project
+  ln -s <PFS_TINKER_PATH> /root/tinker_project/tinker-server
+
+  set -euo pipefail
+  python3 - <<'PY'
+  import time
+
+  import ray
+  from ray._private.node import Node
+  from ray._private.parameter import RayParams
+
+  head = "<RAY_HEAD_IP>:6379"
+  ip = ray.util.get_node_ip_address()
+  print(f"Local node IP: {ip}", flush=True)
+
+  ray_params = RayParams(
+      gcs_address=head,
+      num_gpus=8,
+  )
+  node = Node(ray_params, head=False, shutdown_at_exit=False, spawn_reaper=False)
+  while True:
+      time.sleep(3600)
+  PY
+
+ImageUrl: "image-mindverse-cn-beijing.cr.volces.com/namespace-mindverse/mint:15-sm80"
+ResourceQueueID: "<GPU_QUEUE_ID>"
+Framework: "Custom"
+
+TaskRoleSpecs:
+    - RoleName: "worker"
+      RoleReplicas: 2
+      Flavor: "ml.hpcpni2l.28xlarge"
+
+ActiveDeadlineSeconds: 0
+DelayExitTimeSeconds: 0
+AccessType: "Private"
+
+Storages:
+    - Type: "Vepfs"
+      MountPath: "/vePFS-Mindverse/share"
+      SubPath: "share"
+      ReadOnly: false

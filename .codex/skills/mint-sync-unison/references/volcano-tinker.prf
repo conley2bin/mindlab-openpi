@@ -1,0 +1,31 @@
+# Unison profile template for Mint dev sync.
+# Replace:
+# - `/absolute/path/to/mindlab-openpi/src/mint`
+# - `__PFS_USER__`
+
+root = /absolute/path/to/mindlab-openpi/src/mint
+root = ssh://mint-dev//vePFS-Mindverse/share/code/__PFS_USER__/tinker-server
+
+auto = true
+batch = true
+prefer = newer
+times = true
+
+ignore = Name {*.pyc}
+ignore = Name {__pycache__}
+ignore = Name {*.swp}
+ignore = Name {*.swo}
+ignore = Name {.DS_Store}
+ignore = Name {node_modules}
+ignore = Name {.venv}
+ignore = Name {venv}
+ignore = Name {.mypy_cache}
+ignore = Name {.pytest_cache}
+ignore = Name {*.egg-info}
+ignore = Name {.env}
+ignore = Name {.secrets.env}
+ignore = Name {LOG.md}
+ignore = Name {PROMPT.md}
+ignore = Name {.git}
+
+servercmd = /usr/local/bin/unison
