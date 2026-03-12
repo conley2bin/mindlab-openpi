@@ -15,6 +15,12 @@
 - `docs/progress/openpi-validation-baseline.md`
 - `docs/progress/openpi-compatibility-matrix.md`
 - `docs/targets/subtarget-08-remote-deployment-and-real-checkpoint-validation.md`
+- `src/openpi/docs/remote_inference.md`
+- `src/openpi/examples/aloha_real/compose.yml`
+- `src/openpi/examples/aloha_sim/compose.yml`
+- `src/openpi/examples/libero/compose.yml`
+- `src/openpi/examples/simple_client/compose.yml`
+- `src/mindlab-toolkit/README.md`
 
 ## Deliverables
 
@@ -31,6 +37,7 @@
 2. 定义它需要覆盖的最小 OpenPI contract。
 3. 定义失败归因 bucket 和不可进入 hard gate 的条件。
 4. 落一条 env-driven remote smoke harness，默认不进 hard gate，只在显式 opt-in 时执行。
+5. 保证 remote smoke 继续复用 `src/openpi` 已有 remote-serving 语义和 Toolkit 已有 `MINT_OPENPI_*` 入口，不额外发明并行配置面。
 
 ## Phase 2: Define Service-Hosted Real-Checkpoint Lane
 

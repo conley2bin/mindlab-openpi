@@ -20,6 +20,7 @@ Baseline date: 2026-03-12
 - 已有 repo-owned compatibility matrix，见 `docs/progress/openpi-compatibility-matrix.md`。
 - 目前已经有 deterministic status + inference + artifact + training/future cross-repo closed loop，以及 localhost real-HTTP live-service smoke；real-asset exploratory 命令和 release discipline 也已经写入 progress docs。
 - `src/mint/tests/test_openpi_remote_deployment_smoke.py` 现在提供一条 env-driven remote deployment smoke：status 是最小 reachability signal；提供 checkpoint env 后可继续覆盖 artifact/archive；再提供 config/observation env 后可继续覆盖 service-hosted real-checkpoint infer。
+- `src/openpi/docs/remote_inference.md` 与 `src/openpi/examples/*/compose.yml` 继续作为 upstream remote-serving 事实锚点；`src/mindlab-toolkit/README.md` 则固定了 `MINT_OPENPI_*` 远端入口的用户面，说明 `ST-08` 不是从零定义远端形状，而是在现有三仓材料上补验证和归因。
 - Mint 当前 OpenPI route family 已返回 `X-Mint-OpenPI-Negotiated-Capability`，Toolkit SDK 在 header 存在且 mismatch 时会 fail-fast，在 header 缺失时保持旧服务兼容。
 - 三仓现在都已经有 OpenPI-specific repo-local contract tests；缺口已经从 “有没有 live transport” 转移到 “是否继续扩展 remote deployment smoke、高成本 real checkpoint/manual lane，以及更细 capability contract”。
 

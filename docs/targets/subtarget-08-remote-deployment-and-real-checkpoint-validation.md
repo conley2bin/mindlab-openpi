@@ -34,6 +34,8 @@
 - `docs/progress/openpi-validation-baseline.md` 已经把 `policy_test.py` 和 `download_test.py` 冻结为 exploratory lane，也已经新增 `src/mint/tests/test_openpi_remote_deployment_smoke.py` 的 env-driven 远端验证入口。
 - `docs/progress/openpi-compatibility-matrix.md` 现在已经把 remote deployment smoke 记成一个 opt-in validation layer，而不是“完全不存在”。
 - `src/mint/tests/test_openpi_live_service_smoke.py` 仍只覆盖 localhost transport；远端部署编排和远端 real-checkpoint infer 则由新的 env-driven lane 单独承接。
+- `src/openpi/docs/remote_inference.md` 已经定义 upstream remote policy server / client 的基本形状，`src/openpi/examples/{aloha_real,aloha_sim,libero,simple_client}/compose.yml` 也已经给出服务托管部署样例；`ST-08` 不应无视这些现成锚点重新发明 remote deployment 语义。
+- `src/mindlab-toolkit/README.md` 已经把 `MINT_OPENPI_*` 作为远端 OpenPI client 的默认入口；`ST-08` 的 remote smoke 和 real-checkpoint lane 应继续复用这套入口，而不是再造一套单独配置面。
 
 ## Planned Direction
 
