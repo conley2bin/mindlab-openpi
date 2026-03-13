@@ -41,7 +41,7 @@
 - 保留现有 `/api/v1/openpi/training/start` 作为 low-level bridge，不改写其既有 contract。
 - 在 OpenPI route family 下新增 isolated SFT route，而不是复用 Mint 通用 training routes。
 - SFT request 继续以 `config_name` 作为 OpenPI template anchor，但新增 `config_overrides` 白名单。
-- v1 `config_overrides` 只覆盖 OpenPI `TrainConfig` 上已经稳定存在、且不要求序列化复杂内部对象的顶层字段：
+- 当前 `config_overrides` 只覆盖 OpenPI `TrainConfig` 上已经稳定存在、且不要求序列化复杂内部对象的顶层字段：
   - `batch_size`
   - `num_train_steps`
   - `log_interval`
@@ -51,7 +51,7 @@
   - `seed`
 - `checkpoint_base_dir`、`exp_name`、`overwrite`、`resume` 继续由 Mint bridge 持有，不下放给客户端。
 - 顶层未知请求字段与未知 `config_overrides` 字段都必须 fail-fast 返回 422，不能静默忽略。
-- 不在 v1 暴露 `model`、`data`、`weight_loader`、`optimizer`、`lr_schedule`、`freeze_filter` 这类会把 Mint 变成 OpenPI config authoring layer 的内部对象。
+- 当前 contract 不暴露 `model`、`data`、`weight_loader`、`optimizer`、`lr_schedule`、`freeze_filter` 这类会把 Mint 变成 OpenPI config authoring layer 的内部对象。
 - result / future payload 继续走 OpenPI route family 和 Mint generic future contract，但要能把 SFT lane 与 low-level generic training lane 区分开。
 - `mint://openpi/sft/<config>/<exp>/<step>` 是 Mint 对外暴露的 SFT alias，不要求底层持久化目录额外插入 `sft/`；artifact/archive/resume round-trip 仍必须回到 OpenPI 真实 checkpoint tree。
 - Toolkit 需要提供独立 `mint.openpi` SFT client method，而不是让用户继续手写原始 JSON。
@@ -85,6 +85,6 @@
 ## Guidance For Later Work
 
 - 如果某个 override 无法映射到 `src/openpi` 已存在的 dataclass 顶层字段，就不要在 Mint contract 里伪造它。
-- 如果某个 override 会要求通过 HTTP 传输 `model`、`data`、`optimizer` 或 server-local path，它不属于这个 v1 contract。
+- 如果某个 override 会要求通过 HTTP 传输 `model`、`data`、`optimizer` 或 server-local path，它不属于当前 contract。
 - 如果 future payload 仍然只返回 generic `openpi_training_result`，SDK 至少要能从 route / method 侧维持语义分离；更理想的是显式区分 payload type。
 - 如果后续要扩成更深的 dataset / weight-loader authoring surface，应优先扩 `src/openpi` 的 dataclass/runtime facade，再扩 Mint contract。
