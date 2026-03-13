@@ -23,6 +23,10 @@
 
 `src/openpi` 现在只有 supervised training facade。它还没有一个稳定的 RL runtime facade 去表达 rollout input、reward or advantage carrier、policy update step、resume contract 和 backend/runtime identity。只要这层 upstream owner 不存在，Mint 和 Toolkit 都不能先发布 RL API。
 
+## Rejected Direction
+
+不要先在 Mint 侧做一个“看起来像 RL”的 HTTP 接口，再等 `src/openpi` 以后补齐语义。那样会反过来让 Mint 猜 upstream 语义，形成假 owner。尤其不能把现有 Mint verl 或 Megatron 训练术语直接包装成 OpenPI public contract。
+
 ## What Must Exist Upstream First
 
 Before Mint adds any OpenPI RL route, `src/openpi` must own all of these:

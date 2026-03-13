@@ -22,7 +22,7 @@
 - 顶层只保留当前生效的 canonical plan 文件。
 - 每个仍然活跃的 `ST-xx` 在顶层最多保留一份 canonical plan。
 - 以日期命名的专题设计、实验草稿、一次性执行清单，不应继续留在顶层。
-- 这些临时材料应进入 `docs/plans/archive/` 或 `docs/plans/spikes/`。
+- 如果这些临时材料里的结论被接受，就把有效结论吸收到对应 `st-xx-*.md`，然后直接删除原文件。
 
 ## Suggested Naming
 
@@ -44,4 +44,4 @@
 - 这里可以写到任务层和落地顺序，但不要把每日状态记录混进来。
 - 已发生的进展、阻塞、偏差和结论，应回写到 `docs/progress/` 或 `docs/daily-report/`。
 - 如果一个方案已经失效，不要在原文里写成长篇变更历史；应直接更新当前方案，必要时在 `progress/` 记录变化原因。
-- 如果某个专题设计已经被吸收进 canonical plan，就把原始 dated doc 移到 `archive/`，不要在顶层同时保留两份“当前方案”。
+- 如果某个专题设计已经被吸收进 canonical plan，就删除原始 dated doc，不要在仓库里同时保留两份“当前方案”。

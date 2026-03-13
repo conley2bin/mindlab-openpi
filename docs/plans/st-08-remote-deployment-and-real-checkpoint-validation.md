@@ -41,6 +41,28 @@
 - Updated real-checkpoint validation attribution plan
 - Updated progress docs once a concrete lane lands
 
+## Validation Order
+
+这条子目标的验证顺序固定为两层：
+
+1. 先用主仓库 root-owned `scripts/tools/mint_dev_preflight.py` 验证 `mint-dev` 上的 generic service control-plane。
+2. 再用 `src/mint/scripts/tools/openpi_remote_smoke.py` 或等价 lane 验证 OpenPI-specific deployed HTTP surface。
+
+第一层只回答这些问题：
+
+- `mint-dev` 是否可达
+- `run_server.py` 是否存在
+- `/api/v1/healthz`、`/internal/work_queue/debug_state`、`/internal/work_queue/noop`、`/api/v1/retrieve_future` 是否通过
+
+第一层不负责这些问题：
+
+- OpenPI route semantics 是否正确
+- 谁拥有远端 deployment
+- 哪个 checkpoint 用作真实 smoke fixture
+- 哪个 observation fixture 与 checkpoint 匹配
+
+如果 remote lane 复用 `mint-dev` shared-cluster 环境，就先过第一层，再归因第二层失败。不要把 generic queue、URL reachability 和 OpenPI route regression 混成同一个问题。
+
 ## Phase 0: Freeze The Operational Entry Points
 
 **Steps**
@@ -57,6 +79,7 @@
 4. 明确 cluster discovery 不能假定 `mint-dev` 或 repo host 都可直接运行 `volc ml_task`；Volcano console 或已配置 CLI host 也是合法 discovery source。
 5. 把 `mint-dev` 上的最短 generic service validation 固定下来：`/api/v1/healthz`、`/internal/work_queue/debug_state`、`/internal/work_queue/noop`、`/api/v1/retrieve_future`；healthz ready 不能单独作为 remote smoke 前置条件。
 6. 把这条 validation chain 收敛成主仓库 repo-owned runner，而不是继续要求手工 SSH + curl。
+7. 让这个 preflight runner 默认保持 low-impact：不做 restart、不做 actor recycle、不做 cluster mutation；最重的动作只到一次 `internal.noop` enqueue 和对应 future poll。
 
 ## Phase 1: Define Remote Deployment Smoke Boundary
 

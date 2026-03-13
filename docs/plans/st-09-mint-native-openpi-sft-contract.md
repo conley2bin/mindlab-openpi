@@ -32,6 +32,12 @@
 - Keep: `mint.openpi.OpenPIClient.start_training()` as the low-level generic bridge
 - Primary SFT entry: `mint.openpi.OpenPIClient.start_sft_training()`
 
+### Why the route stays split
+
+- 如果继续往 `POST /api/v1/openpi/training/start` 塞更多字段，这个 generic bridge 会从“简单转发入口”膨胀成混合接口。
+- 一旦 SFT 和未来 RL 都共用一个 endpoint，SDK、测试和文档都会失去清晰语义分界。
+- 当前做法是保留 low-level generic bridge，再把 SFT 放到 isolated route；这样 generic training、SFT、未来 RL 各自独立，不会互相污染。
+
 ### Request shape
 
 SFT request stays on a small, explicit surface:
