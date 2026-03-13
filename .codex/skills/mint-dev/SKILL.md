@@ -48,7 +48,7 @@ Preferred first pass:
 python3 scripts/tools/mint_dev_preflight.py --json
 ```
 
-If you need the same chain step-by-step or the runner itself fails, run these manually:
+If you need the exact same probe order step-by-step or the runner itself fails, run these manually:
 
 ```bash
 ssh mint-dev 'hostname; whoami'
@@ -65,7 +65,7 @@ ssh mint-dev 'curl -sS -m 10 -X POST http://localhost:8000/api/v1/retrieve_futur
 
 The health probe above runs on `mint-dev`. A local `curl http://localhost:8000/...` only makes sense after you create an explicit SSH tunnel.
 
-If the host has API-key auth enabled, pass `--api-key` to `python3 scripts/tools/mint_dev_preflight.py --json`, or add `-H "X-API-Key: REPLACE_WITH_API_KEY"` to every manual `curl` probe below, including `healthz`, `debug_state`, `noop` and `retrieve_future`.
+If the host has API-key auth enabled, pass `--api-key` to `python3 scripts/tools/mint_dev_preflight.py --json`. For manual fallback, use the same probe chain above but add `-H "X-API-Key: REPLACE_WITH_API_KEY"` to every `curl` call, including `healthz`, `debug_state`, `noop` and `retrieve_future`.
 
 Interpretation:
 
@@ -171,7 +171,7 @@ cd "$ROOT" && nohup bash -c "
 
 Do not stop at `/api/v1/healthz`.
 
-If the host has API-key auth enabled, add `-H "X-API-Key: REPLACE_WITH_API_KEY"` to every `curl` call below.
+If the host has API-key auth enabled, add `-H "X-API-Key: REPLACE_WITH_API_KEY"` to every `curl` call below. Do not add it to only one endpoint; the queue-control-plane diagnosis depends on the full `healthz` to `debug_state` to `noop` to `retrieve_future` chain.
 
 ```bash
 ssh mint-dev 'curl -sS -m 5 http://localhost:8000/api/v1/healthz'
