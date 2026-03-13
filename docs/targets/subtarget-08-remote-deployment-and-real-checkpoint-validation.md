@@ -41,11 +41,13 @@
 - `src/openpi/docs/remote_inference.md` 已经定义 upstream remote policy server / client 的基本形状，`src/openpi/examples/{aloha_real,aloha_sim,libero,simple_client}/compose.yml` 也已经给出服务托管部署样例；`ST-08` 不应无视这些现成锚点重新发明 remote deployment 语义。
 - `src/mindlab-toolkit/README.md` 已经把 `MINT_OPENPI_*` 作为远端 OpenPI client 的默认入口；`ST-08` 的 remote smoke 和 real-checkpoint lane 应继续复用这套入口，而不是再造一套单独配置面。
 - 主仓库 `.codex/skills/{mint-dev,volcano-cluster,mint-sync-unison,ray-namespace-isolation}` 现在承接 dev host、Volcano/Ray、code sync 与 namespace isolation 的 agent 入口；`src/mint/.claude/skills/*` 可以继续作为参考，但不再是主仓库工作流的唯一入口。
+- 主仓库 `scripts/tools/mint_dev_preflight.py` 现在提供 repo-owned `mint-dev` preflight runner，把 host/process/log/`healthz`/`debug_state`/`noop`/`retrieve_future` 固定成一个 CLI，而不是继续要求手工拼装 SSH + curl。
 - 当前 cluster discovery 不能假定 `mint-dev` 或 repo host 自带可用 `volc ml_task`；后续实现必须允许 Volcano console 或另一个已配置 CLI host 提供 head/task 发现信息。
 
 ## Planned Direction
 
 - 单独建立 remote deployment smoke，不直接改写当前 localhost smoke 的定义。
+- 把 `mint-dev` generic service control-plane 预检固定成 repo-owned runner，并把它放在 remote deployment smoke 之前。
 - 单独建立服务托管 real-checkpoint / real-asset lane，不让它反向污染 deterministic gate。
 - 每条高成本 lane 都必须先定义 failure attribution bucket，再决定是否能进入 hard gate。
 - 远端 transport 已经成功返回 HTTP response 时，不要把失败默认归到 `sdk`；`sdk` bucket 只保留给本地 client-side decode、capability enforcement 或其他非 HTTP 响应路径的错误。
@@ -79,5 +81,5 @@
 - 如果某条高成本 lane 仍然无法区分环境失败和 contract regression，它还不具备成为 hard gate 的条件。
 - 如果远端 lane 依赖 base URL、API key、checkpoint URI 或 observation fixture，它们必须被写成显式 env 输入，而不是藏在测试代码里。
 - 如果失败来自远端 HTTP surface 的 status code，它应该先落在 deployment / runtime / service 中的一个；只有 transport 已经成功且本地 client 在 decode 或 capability 校验阶段拒绝响应时，才应归到 `sdk`。
-- 如果 remote lane 复用 `mint-dev` shared-cluster 环境，它必须先通过 generic queue control-plane probes，再把后续失败归因到 OpenPI-specific routes。
+- 如果 remote lane 复用 `mint-dev` shared-cluster 环境，它必须先通过 `scripts/tools/mint_dev_preflight.py` 或等价的 generic queue control-plane probes，再把后续失败归因到 OpenPI-specific routes。
 - 如果 dev host、cluster discovery、code sync 或 namespace isolation 的操作约束发生变化，应先更新主仓库 `.codex/skills/*`，再决定是否同步到 `src/mint/.claude/skills/*`。

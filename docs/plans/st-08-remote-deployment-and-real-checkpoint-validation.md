@@ -30,6 +30,8 @@
 
 - `src/mint/tests/test_openpi_remote_deployment_smoke.py`
 - `src/mint/scripts/tools/openpi_remote_smoke.py`
+- `scripts/tools/mint_dev_preflight.py`
+- `tests/test_mint_dev_preflight.py`
 - `src/mint/tests/fixtures/openpi_remote_observation.sample.json`
 - `.codex/skills/mint-dev/SKILL.md`
 - `.codex/skills/volcano-cluster/SKILL.md`
@@ -54,6 +56,7 @@
 3. 让 worker/reference 模板显式使用 per-user `PFS_TINKER_PATH`，不要再默认共享 `/vePFS-Mindverse/share/code/tinker-server`。
 4. 明确 cluster discovery 不能假定 `mint-dev` 或 repo host 都可直接运行 `volc ml_task`；Volcano console 或已配置 CLI host 也是合法 discovery source。
 5. 把 `mint-dev` 上的最短 generic service validation 固定下来：`/api/v1/healthz`、`/internal/work_queue/debug_state`、`/internal/work_queue/noop`、`/api/v1/retrieve_future`；healthz ready 不能单独作为 remote smoke 前置条件。
+6. 把这条 validation chain 收敛成主仓库 repo-owned runner，而不是继续要求手工 SSH + curl。
 
 ## Phase 1: Define Remote Deployment Smoke Boundary
 

@@ -1,6 +1,6 @@
 # OpenPI Integration Baseline
 
-Baseline date: 2026-03-12
+Baseline date: 2026-03-13
 
 ## Scope
 
@@ -22,7 +22,9 @@ Baseline date: 2026-03-12
 - `src/mint/tests/test_openpi_remote_deployment_smoke.py` 现在提供一条 env-driven remote deployment smoke：status 是最小 reachability signal；提供 checkpoint env 后可继续覆盖 artifact/archive；再提供 config/observation env 后可继续覆盖 service-hosted real-checkpoint infer。observation 输入既支持直接传 `MINT_OPENPI_REMOTE_OBSERVATION_JSON`，也支持用 `MINT_OPENPI_REMOTE_OBSERVATION_PATH` 指向 repo-owned sample fixture template；base URL、timeout 以及 infer lane 已选中后的 malformed/conflicting observation input 都会显式归到 `environment`；如果没有提供 observation env，则 real-checkpoint infer lane 继续跳过。远端 HTTP response 失败与本地 SDK-side contract/decode failure 也已分开归因。`src/mint/scripts/tools/openpi_remote_smoke.py` 则把这条 lane 收敛成 repo-owned runner，避免继续手工拼装长串 env。
 - `src/openpi/docs/remote_inference.md` 与 `src/openpi/examples/*/compose.yml` 继续作为 upstream remote-serving 事实锚点；`src/mindlab-toolkit/README.md` 则固定了 `MINT_OPENPI_*` 远端入口的用户面，说明 `ST-08` 不是从零定义远端形状，而是在现有三仓材料上补验证和归因。
 - `ST-08` 相关 dev host、Volcano/Ray、Unison sync 与 namespace isolation 入口现在收敛到主仓库 `.codex/skills/{mint-dev,volcano-cluster,mint-sync-unison,ray-namespace-isolation}`；这层 root docs 固定了显式 `RAY_ADDRESS`、per-user PFS 和本机 Unison daemon 这些运维前提，避免把 `src/mint/.claude/skills/*` 当成唯一入口。
-- `mint-dev` 上当前 shared-cluster lane 已经补上 generic queue control-plane 验证：不能只看 `/api/v1/healthz`，还要看 `/internal/work_queue/debug_state`、`/internal/work_queue/noop` 和 `/api/v1/retrieve_future`。2026-03-13 对同一个 detached `tinker_api_work_queue` 连续做两次 server-only restart 后，这条链仍然保持通过。
+- 主仓库 `scripts/tools/mint_dev_preflight.py` 现在把 `mint-dev` generic service control-plane 预检固定成 repo-owned CLI。它验证 host/process/log/`healthz`/`debug_state`/`noop`/`retrieve_future`，但不验证 OpenPI-specific route semantics，也不承担 restart / actor recycle。
+- `mint-dev` 上当前 shared-cluster lane 已经补上 generic queue control-plane 验证：不能只看 `/api/v1/healthz`，还要看 `/internal/work_queue/debug_state`、`/internal/work_queue/noop` 和 `/api/v1/retrieve_future`。
+- 2026-03-13 的 server-only restart / actor continuity 结果属于历史手工调试观察，不属于这条 preflight runner 的当前验证合同；后续如果要据此做运维动作，必须先重验当前环境。
 - Mint 当前 OpenPI route family 已返回 `X-Mint-OpenPI-Negotiated-Capability`，Toolkit SDK 在 header 存在且 mismatch 时会 fail-fast，在 header 缺失时保持旧服务兼容。
 - 三仓现在都已经有 OpenPI-specific repo-local contract tests；缺口已经从 “有没有 live transport” 转移到 “是否继续扩展 remote deployment smoke、高成本 real checkpoint/manual lane，以及更细 capability contract”。
 
@@ -45,7 +47,7 @@ Baseline date: 2026-03-12
 | `ST-05` | compatibility matrix、validation baseline、三仓 repo-local contract tests 与 deterministic fake-runtime closed loop 都已落地。当前只负责 deterministic baseline。 |
 | `ST-06` | localhost real-HTTP live-service smoke、service-hosted local checkpoint-layout artifact round-trip、real-asset exploratory 命令、release discipline docs、Toolkit repo-native workflow 和 Mint repo-native workflow 已落地。当前没有仍留在 `ST-06` 内部的实现缺口。 |
 | `ST-07` | response-side negotiated capability header 与 SDK 侧 mismatch fail-fast 已落地。后续若继续扩张，只剩把单一 version string 扩成结构化 capability set，以及是否让 generic `retrieve_future` 也返回 OpenPI-negotiated signal。 |
-| `ST-08` | env-driven remote deployment smoke 与 optional real-checkpoint infer lane 已落地第一刀，但仍依赖外部部署、凭据、checkpoint 和 observation fixture，尚不能进入 hard gate；相关 `mint-dev` / Volcano / Unison / namespace isolation 操作也已经转到主仓库 root skills 统一约束。 |
+| `ST-08` | env-driven remote deployment smoke 与 optional real-checkpoint infer lane 已落地第一刀；repo-owned `scripts/tools/mint_dev_preflight.py` 也已把 `mint-dev` generic service control-plane 预检固定下来。但远端 lane 仍依赖外部部署、凭据、checkpoint 和 observation fixture，尚不能进入 hard gate。 |
 
 ## Current Working Cut For The First Implementation Pass
 

@@ -11,25 +11,44 @@ description: Use when checking or operating the Mint development host on `ssh mi
 
 Use this skill for host-local server work. Use `mint-sync-unison` for local-to-PFS sync. Use `volcano-cluster` for head/worker lifecycle. Use `ray-namespace-isolation` for namespace and per-user path decisions.
 
-## Verified Facts
+Repo-owned fast path from the monorepo root:
+
+```bash
+python3 scripts/tools/mint_dev_preflight.py --json
+```
+
+This runner executes the canonical host/process/log/`healthz`/`debug_state`/`noop`/`retrieve_future` chain over `ssh mint-dev` without restart or actor recycle. It does enqueue one `internal.noop` request as the minimum queue control-plane check.
+
+## Stable Facts
 
 - SSH host: `ssh mint-dev`
 - Default API port: `8000`
 - Server log: `/tmp/tinker_server.log`
 - Server working tree path: `/root/tinker_project/tinker-server`
 - The server path is usually a symlink into per-user PFS, not a Git checkout.
+- `mint-dev` itself may show no GPU in `nvidia-smi`. Do not treat that as proof that the Ray cluster has no GPU workers.
+- `GET /api/v1/healthz -> 200 {"status":"ready"}` does not prove detached `tinker_api_work_queue` is healthy.
+
+## Historical Observations To Re-Verify
+
+These were manual observations from 2026-03-13. Re-verify them against the current cluster before using them in mutating commands.
+
 - Current reachable shared head observed on 2026-03-13: `192.168.37.134:6379`.
 - A stale head address `192.168.37.7:6379` also existed and timed out.
 - `ray.init(address="auto")` can bind to a stale head. Prefer an explicit `RAY_ADDRESS` taken from the active dev head.
 - `mint-dev` default `python3` is `3.12.12`, while the active shared Ray cluster is `Python 3.12.13`.
 - Observed working runtime under the active symlink target on 2026-03-13: `/vePFS-Mindverse/share/code/conley/tinker-server/.python-3.12.13` and `/vePFS-Mindverse/share/code/conley/tinker-server/.venv31213`.
-- `mint-dev` needs a local CPU-only raylet joined to the shared cluster before host-local drivers and `run_server.py` behave reliably. The stable node IP on 2026-03-13 was `192.168.33.174`; binding to `9.36.26.252` died from missed heartbeats.
-- `mint-dev` itself may show no GPU in `nvidia-smi`. Do not treat that as proof that the Ray cluster has no GPU workers.
-- `GET /api/v1/healthz -> 200 {"status":"ready"}` does not prove detached `tinker_api_work_queue` is healthy.
+- In the 2026-03-13 shared-cluster setup, host-local drivers and `run_server.py` behaved reliably only after a local CPU-only raylet joined the shared head. The stable node IP on that date was `192.168.33.174`; binding to `9.36.26.252` died from missed heartbeats.
 
 ## Read-Only Triage
 
-Run these first:
+Preferred first pass:
+
+```bash
+python3 scripts/tools/mint_dev_preflight.py --json
+```
+
+If you need the same chain step-by-step or the runner itself fails, run these manually:
 
 ```bash
 ssh mint-dev 'hostname; whoami'
@@ -38,9 +57,15 @@ ssh mint-dev 'ps aux | grep run_server | grep -v grep || true'
 ssh mint-dev 'tail -50 /tmp/tinker_server.log'
 ssh mint-dev 'curl -sS -m 5 http://localhost:8000/api/v1/healthz'
 ssh mint-dev 'curl -sS -m 10 http://localhost:8000/internal/work_queue/debug_state'
+ssh mint-dev 'curl -sS -m 10 -X POST http://localhost:8000/internal/work_queue/noop'
+ssh mint-dev 'curl -sS -m 10 -X POST http://localhost:8000/api/v1/retrieve_future \
+  -H "content-type: application/json" \
+  -d "{\"request_id\":\"REPLACE_WITH_NOOP_REQUEST_ID\"}"'
 ```
 
 The health probe above runs on `mint-dev`. A local `curl http://localhost:8000/...` only makes sense after you create an explicit SSH tunnel.
+
+If the host has API-key auth enabled, pass `--api-key` to `python3 scripts/tools/mint_dev_preflight.py --json`, or add `-H "X-API-Key: REPLACE_WITH_API_KEY"` to every manual `curl` probe below, including `healthz`, `debug_state`, `noop` and `retrieve_future`.
 
 Interpretation:
 
@@ -54,6 +79,8 @@ Interpretation:
 ## Discover The Active Ray Head
 
 Do not trust `address="auto"` blindly.
+
+Everything below this heading is manual diagnosis or remediation outside the preflight runner contract. Re-verify current head IP, runtime path, node IP and namespace before acting on the shared environment.
 
 1. Use `volcano-cluster` to identify the active dev head task.
 2. Extract the current head IP from head task logs.
@@ -75,9 +102,9 @@ finally:
 PY'
 ```
 
-## Ensure Local Raylet Membership
+## Ensure Local Raylet Membership (Manual, Mutating)
 
-On `mint-dev`, host-local drivers and `run_server.py` must see a live local raylet joined to the shared head.
+If host-local drivers or `run_server.py` cannot attach reliably on `mint-dev`, one manual hypothesis to check is whether a local CPU-only raylet is joined to the shared head.
 
 ```bash
 ssh mint-dev 'ROOT=/root/tinker_project/tinker-server; \
@@ -102,7 +129,7 @@ RAY_ADDRESS=REPLACE_WITH_HEAD_IP:6379 \
 "$VENV/bin/python3.12" -m ray.scripts.scripts status'
 ```
 
-## Start Or Restart The Dev Server
+## Start Or Restart The Dev Server (Manual, Mutating)
 
 Never borrow another developer's private interpreter path. Verify which interpreter exists under your current PFS-backed tree first.
 
@@ -144,6 +171,8 @@ cd "$ROOT" && nohup bash -c "
 
 Do not stop at `/api/v1/healthz`.
 
+If the host has API-key auth enabled, add `-H "X-API-Key: REPLACE_WITH_API_KEY"` to every `curl` call below.
+
 ```bash
 ssh mint-dev 'curl -sS -m 5 http://localhost:8000/api/v1/healthz'
 ssh mint-dev 'curl -sS -m 10 http://localhost:8000/internal/work_queue/debug_state'
@@ -153,6 +182,8 @@ ssh mint-dev 'curl -sS -m 10 -X POST http://localhost:8000/api/v1/retrieve_futur
   -d "{\"request_id\":\"REPLACE_WITH_NOOP_REQUEST_ID\"}"'
 ```
 
+If `retrieve_future` is still pending, repeat that last probe until it reaches a terminal payload.
+
 Healthy flow:
 
 - `/api/v1/healthz` returns `200`
@@ -160,7 +191,7 @@ Healthy flow:
 - `/internal/work_queue/noop` returns a `request_id`
 - `/api/v1/retrieve_future` returns `{"ok": true, "op": "internal.noop", ...}`
 
-## Recycle A Bad Queue Actor
+## Recycle A Bad Queue Actor (Manual, Mutating)
 
 If `healthz` is ready but queue control-plane probes fail, recycle only the queue actor in the active namespace, then restart the server.
 
@@ -184,8 +215,8 @@ PY'
 - Do not assume `mint-dev` has a usable local GPU.
 - Do not assume `/root/tinker_project/tinker-server` contains `.git`.
 - Do not start the server with `address="auto"` when a stale head address is plausible.
-- Do not start host-local drivers with `python3` 3.12.12 against the shared 3.12.13 cluster.
-- Do not skip the local raylet join check on `mint-dev`.
+- Do not start host-local drivers with a Python runtime that does not match the currently active shared Ray cluster runtime; re-verify the cluster version before launching.
+- Do not skip checking whether `mint-dev` still needs a local raylet join when host-local drivers or `run_server.py` fail to attach reliably.
 - Do not treat `healthz ready` as proof that `api_work_queue` is healthy.
 - Do not point `PFS_TINKER_PATH` at another developer's tree.
 - Do not pick a namespace until `ray-namespace-isolation` rules are satisfied.
