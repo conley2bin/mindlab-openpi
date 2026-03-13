@@ -17,6 +17,13 @@
 - `docs/targets/` 是上位约束，`docs/plans/` 不应违背其中的边界和非目标。
 - 如果实施方案发现目标文档有遗漏，应先回补 `docs/targets/`，再继续写方案。
 
+## Canonical Layout
+
+- 顶层只保留当前生效的 canonical plan 文件。
+- 每个仍然活跃的 `ST-xx` 在顶层最多保留一份 canonical plan。
+- 以日期命名的专题设计、实验草稿、一次性执行清单，不应继续留在顶层。
+- 这些临时材料应进入 `docs/plans/archive/` 或 `docs/plans/spikes/`。
+
 ## Suggested Naming
 
 - `st-01-*.md`
@@ -27,20 +34,14 @@
 - `st-06-*.md`
 - `st-07-*.md`
 - `st-08-*.md`
+- `st-09-*.md`
+- `st-10-*.md`
 
-这些文件名分别对应：
-
-- `ST-01` / `docs/targets/subtarget-01-*.md`
-- `ST-02` / `docs/targets/subtarget-02-*.md`
-- `ST-03` / `docs/targets/subtarget-03-*.md`
-- `ST-04` / `docs/targets/subtarget-04-*.md`
-- `ST-05` / `docs/targets/subtarget-05-*.md`
-- `ST-06` / `docs/targets/subtarget-06-*.md`
-- `ST-07` / `docs/targets/subtarget-07-*.md`
-- `ST-08` / `docs/targets/subtarget-08-*.md`
+这些文件名分别对应 `docs/targets/subtarget-xx-*.md` 中相同编号的子目标。
 
 ## Rules
 
 - 这里可以写到任务层和落地顺序，但不要把每日状态记录混进来。
 - 已发生的进展、阻塞、偏差和结论，应回写到 `docs/progress/` 或 `docs/daily-report/`。
 - 如果一个方案已经失效，不要在原文里写成长篇变更历史；应直接更新当前方案，必要时在 `progress/` 记录变化原因。
+- 如果某个专题设计已经被吸收进 canonical plan，就把原始 dated doc 移到 `archive/`，不要在顶层同时保留两份“当前方案”。

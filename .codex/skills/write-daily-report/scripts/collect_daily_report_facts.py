@@ -73,6 +73,16 @@ def _run_git(repo_root: pathlib.Path, *args: str) -> str:
     return _run_git_cwd(repo_root, *args)
 
 
+def _git_object_exists(cwd: pathlib.Path, rev: str) -> bool:
+    proc = subprocess.run(
+        ["git", "cat-file", "-e", f"{rev}^{{object}}"],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+    )
+    return proc.returncode == 0
+
+
 def _format_author_date(value: str) -> str:
     if HUMAN_AUTHOR_DATE_RE.fullmatch(value.strip()):
         return value.strip()
@@ -487,6 +497,10 @@ def _collect_submodule_code_evidence(
         return []
     submodule_root = repo_root / submodule_path
     if not submodule_root.exists():
+        return []
+    if not _git_object_exists(submodule_root, old_sha):
+        return []
+    if not _git_object_exists(submodule_root, new_sha):
         return []
     raw = _run_git_cwd(submodule_root, "diff", "--name-status", old_sha, new_sha)
     changed_files: list[str] = []
