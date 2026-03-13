@@ -80,7 +80,7 @@
 | ST-06 | Operational Hardening And Release Discipline | completed | `src/mint`, `src/openpi`, `src/mindlab-toolkit` | 补齐 live-service smoke、real-asset lane 与 repo/version release discipline | [subtarget-06-operational-hardening-and-release-discipline.md](./subtarget-06-operational-hardening-and-release-discipline.md) |
 | ST-07 | Capability Negotiation And Skew Detection | completed | `src/mint`, `src/mindlab-toolkit` | 补上 response-side capability signal 与 SDK 侧 skew detection | [subtarget-07-capability-negotiation-and-skew-detection.md](./subtarget-07-capability-negotiation-and-skew-detection.md) |
 | ST-08 | Remote Deployment And Real-Checkpoint Validation | in_progress | `src/mint`, `src/openpi`, `src/mindlab-toolkit` | 建立 localhost 之外的部署验证层与高成本 real-checkpoint 归因面 | [subtarget-08-remote-deployment-and-real-checkpoint-validation.md](./subtarget-08-remote-deployment-and-real-checkpoint-validation.md) |
-| ST-09 | Mint-Native OpenPI SFT Contract | in_progress | `src/mint`, `src/openpi`, `src/mindlab-toolkit` | 把 OpenPI training 从 registry-name bridge 扩成隔离的 Mint-native SFT 参数面 | [subtarget-09-mint-native-openpi-sft-contract.md](./subtarget-09-mint-native-openpi-sft-contract.md) |
+| ST-09 | Mint-Native OpenPI SFT Contract | completed | `src/mint`, `src/openpi`, `src/mindlab-toolkit` | 把 OpenPI training 从 registry-name bridge 扩成隔离的 Mint-native SFT 参数面 | [subtarget-09-mint-native-openpi-sft-contract.md](./subtarget-09-mint-native-openpi-sft-contract.md) |
 | ST-10 | Mint-Native OpenPI RL Contract | research | `src/mint`, `src/openpi`, `src/mindlab-toolkit` | 为未来 RL 训练面先固定边界、缺口和不污染其他模型族的接入约束 | [subtarget-10-mint-native-openpi-rl-contract.md](./subtarget-10-mint-native-openpi-rl-contract.md) |
 
 ## Dependency Notes

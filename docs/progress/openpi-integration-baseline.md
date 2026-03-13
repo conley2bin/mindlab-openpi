@@ -48,7 +48,7 @@ Baseline date: 2026-03-13
 | `ST-06` | localhost real-HTTP live-service smoke、service-hosted local checkpoint-layout artifact round-trip、real-asset exploratory 命令、release discipline docs、Toolkit repo-native workflow 和 Mint repo-native workflow 已落地。当前没有仍留在 `ST-06` 内部的实现缺口。 |
 | `ST-07` | response-side negotiated capability header 与 SDK 侧 mismatch fail-fast 已落地。后续若继续扩张，只剩把单一 version string 扩成结构化 capability set，以及是否让 generic `retrieve_future` 也返回 OpenPI-negotiated signal。 |
 | `ST-08` | env-driven remote deployment smoke 与 optional real-checkpoint infer lane 已落地第一刀；repo-owned `scripts/tools/mint_dev_preflight.py` 也已把 `mint-dev` generic service control-plane 预检固定下来。但远端 lane 仍依赖外部部署、凭据、checkpoint 和 observation fixture，尚不能进入 hard gate。 |
-| `ST-09` | isolated SFT route、SDK method 与 white-list `TrainConfig` override 已落地第一刀；后续是否继续向 dataset / weight-loader authoring 扩张仍需先看 `src/openpi` owner surface。 |
+| `ST-09` | isolated SFT route、SDK method、white-list `TrainConfig` override、顶层未知字段 fail-fast 与 SFT checkpoint alias round-trip 已完成；更深的 dataset / weight-loader authoring surface 继续留在后续 `src/openpi` owner 扩展。 |
 | `ST-10` | `src/openpi` 当前仍无 RL runtime facade；现有 `RLDS*` config/data loader 只是数据输入形态，现有 Mint `ppo` / `importance_sampling` / `rollout_correction_config` 则属于 verl/Megatron 训练栈。Mint 和 Toolkit 侧只能先固定 research / contract 边界，不能先伪造 RL API。 |
 
 ## Current Working Cut For The First Implementation Pass
