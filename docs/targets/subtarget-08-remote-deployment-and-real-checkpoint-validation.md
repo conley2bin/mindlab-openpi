@@ -35,6 +35,7 @@
 - `docs/progress/openpi-compatibility-matrix.md` 现在已经把 remote deployment smoke 记成一个 opt-in validation layer，而不是“完全不存在”。
 - `src/mint/tests/test_openpi_live_service_smoke.py` 仍只覆盖 localhost transport；远端部署编排和远端 real-checkpoint infer 则由新的 env-driven lane 单独承接。
 - `src/mint/tests/test_openpi_remote_deployment_smoke.py` 现在已经把 base URL、timeout 和 observation fixture 解析固定成显式 environment gate；同时把远端 HTTP error response 与本地 SDK-side contract/decode failure 分开归因，避免把同一类失败混进 `sdk` bucket。
+- 仓库当前已经提供 `src/mint/tests/fixtures/openpi_remote_observation.sample.json` 作为 remote infer 的 observation 模板；测试既支持 `MINT_OPENPI_REMOTE_OBSERVATION_JSON`，也支持 `MINT_OPENPI_REMOTE_OBSERVATION_PATH` 指向绝对路径 fixture。
 - `mint-dev` 上已经验证出一条 generic service control-plane 基线：`/api/v1/healthz` ready 不能单独证明队列可用；至少还要通过 `/internal/work_queue/debug_state`、`/internal/work_queue/noop` 和 `/api/v1/retrieve_future`。
 - `src/openpi/docs/remote_inference.md` 已经定义 upstream remote policy server / client 的基本形状，`src/openpi/examples/{aloha_real,aloha_sim,libero,simple_client}/compose.yml` 也已经给出服务托管部署样例；`ST-08` 不应无视这些现成锚点重新发明 remote deployment 语义。
 - `src/mindlab-toolkit/README.md` 已经把 `MINT_OPENPI_*` 作为远端 OpenPI client 的默认入口；`ST-08` 的 remote smoke 和 real-checkpoint lane 应继续复用这套入口，而不是再造一套单独配置面。

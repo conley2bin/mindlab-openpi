@@ -29,6 +29,7 @@
 ## Deliverables
 
 - `src/mint/tests/test_openpi_remote_deployment_smoke.py`
+- `src/mint/tests/fixtures/openpi_remote_observation.sample.json`
 - `.codex/skills/mint-dev/SKILL.md`
 - `.codex/skills/volcano-cluster/SKILL.md`
 - `.codex/skills/mint-sync-unison/SKILL.md`
@@ -62,8 +63,9 @@
 3. 定义失败归因 bucket 和不可进入 hard gate 的条件。
 4. 固定 bucket 边界：environment 负责 env fixture 解析，deployment/runtime/service 负责远端 HTTP surface，SDK 只负责本地 client-side contract enforcement。
 5. 落一条 env-driven remote smoke harness，默认不进 hard gate，只在显式 opt-in 时执行。
-6. 保证 remote smoke 继续复用 `src/openpi` 已有 remote-serving 语义和 Toolkit 已有 `MINT_OPENPI_*` 入口，不额外发明并行配置面。
-7. 保证任何涉及 `mint-dev`、Volcano、Ray、Unison 的操作说明都先收敛到主仓库 root skills，再由测试/文档引用这些入口。
+6. 给 remote smoke harness 配一份 repo-owned observation sample fixture，并允许通过绝对路径 env 引用，避免每次都手写超长 JSON。
+7. 保证 remote smoke 继续复用 `src/openpi` 已有 remote-serving 语义和 Toolkit 已有 `MINT_OPENPI_*` 入口，不额外发明并行配置面。
+8. 保证任何涉及 `mint-dev`、Volcano、Ray、Unison 的操作说明都先收敛到主仓库 root skills，再由测试/文档引用这些入口。
 
 ## Phase 2: Define Service-Hosted Real-Checkpoint Lane
 

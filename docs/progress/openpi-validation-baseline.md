@@ -156,6 +156,7 @@ What this gate does not cover:
 cd src/mint && \
   MINT_OPENPI_REMOTE_SMOKE=1 \
   MINT_OPENPI_REMOTE_BASE_URL=https://<deployment-host> \
+  MINT_OPENPI_REMOTE_OBSERVATION_PATH=$PWD/tests/fixtures/openpi_remote_observation.sample.json \
   .venv/bin/pytest tests/test_openpi_remote_deployment_smoke.py -q
 ```
 
@@ -166,15 +167,18 @@ Optional env for deeper coverage:
 - `MINT_OPENPI_REMOTE_CHECKPOINT_URI`
 - `MINT_OPENPI_REMOTE_CONFIG_NAME`
 - `MINT_OPENPI_REMOTE_OBSERVATION_JSON`
+- `MINT_OPENPI_REMOTE_OBSERVATION_PATH`
+
+`MINT_OPENPI_REMOTE_OBSERVATION_JSON` 与 `MINT_OPENPI_REMOTE_OBSERVATION_PATH` 二选一。仓库内置 sample fixture 在 `src/mint/tests/fixtures/openpi_remote_observation.sample.json`。
 
 What this lane covers:
 
 - Toolkit SDK to deployed Mint OpenPI service outside localhost
 - public status as the minimum remote deployment reachability signal
 - artifact resolve and archive download when `MINT_OPENPI_REMOTE_CHECKPOINT_URI` is provided
-- service-hosted real-checkpoint infer when `MINT_OPENPI_REMOTE_CHECKPOINT_URI`、`MINT_OPENPI_REMOTE_CONFIG_NAME` and `MINT_OPENPI_REMOTE_OBSERVATION_JSON` are all provided
+- service-hosted real-checkpoint infer when `MINT_OPENPI_REMOTE_CHECKPOINT_URI`、`MINT_OPENPI_REMOTE_CONFIG_NAME` and one of `MINT_OPENPI_REMOTE_OBSERVATION_JSON` / `MINT_OPENPI_REMOTE_OBSERVATION_PATH` are provided
 - explicit failure bucket prefixes in test failures: `environment`, `deployment`, `runtime`, `service`, `sdk`
-- once `MINT_OPENPI_REMOTE_SMOKE=1`, missing or non-absolute `MINT_OPENPI_REMOTE_BASE_URL`, malformed / non-finite `MINT_OPENPI_REMOTE_TIMEOUT_S`, and malformed / non-object `MINT_OPENPI_REMOTE_OBSERVATION_JSON`, are treated as `environment` failures instead of silent skips
+- once `MINT_OPENPI_REMOTE_SMOKE=1`, missing or non-absolute `MINT_OPENPI_REMOTE_BASE_URL`, malformed / non-finite `MINT_OPENPI_REMOTE_TIMEOUT_S`, malformed / non-object `MINT_OPENPI_REMOTE_OBSERVATION_JSON`, malformed / missing / non-absolute `MINT_OPENPI_REMOTE_OBSERVATION_PATH`, and setting both observation envs at once are treated as `environment` failures instead of silent skips
 
 What this lane does not cover:
 
