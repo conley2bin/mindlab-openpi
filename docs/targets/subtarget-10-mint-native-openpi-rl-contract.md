@@ -31,8 +31,10 @@
 ## Current Topology Signals
 
 - `src/mint/tinker_server/routes/training.py` 与 `src/mint/tinker_server/backend/megatron_distributed.py` 已经承载 `cross_entropy`、`ppo`、`importance_sampling` 与 rollout correction，这条线属于现有 Mint 训练栈。
-- `src/openpi/src/openpi/integration/training.py` 当前只暴露 supervised training dispatch，没有 RL trainer facade。
-- `src/openpi/src/openpi/training/data_loader.py` 与 `src/openpi/src/openpi/training/config.py` 处理的是 dataset / loader / checkpoint 语义，不等于 RL rollout / reward / policy-loss surface。
+- `src/mint/tinker_server/models/types.py` 的 `RolloutCorrectionConfig` 明确写着它镜像的是 `verl` 的 `policy_loss.rollout_correction` schema；这是 Mint/verl 语义，不是 OpenPI public contract。
+- `src/openpi/src/openpi/integration/training.py` 当前只暴露 `run_training` / `run_jax_training` / `run_pytorch_training` 这条 supervised training dispatch，没有 rollout/reward/update 语义，也没有独立 RL trainer facade。
+- `src/openpi/src/openpi/training/data_loader.py` 与 `src/openpi/src/openpi/training/config.py` 虽然有 `RLDS*` 数据加载配置，但它们处理的是 dataset / loader / checkpoint 语义，不等于 RL rollout / reward / policy-loss runtime。
+- `src/openpi/src/openpi/training/data_loader.py` 里的 `create_rlds_data_loader()` 甚至还显式说明 PyTorch RLDS data loader 不支持；这再次说明当前存在的是数据输入形态，不是完整 RL runtime owner。
 
 ## Planned Direction
 
@@ -43,6 +45,10 @@
   - reward / rollout / dataset semantics
   - checkpoint / policy / actor update contract
   - 与现有 Mint RL 训练栈的复用边界
+- 如果上述 owner surface 真的落地，再进入 Mint / Toolkit：
+  - Mint 才能新增 isolated `/api/v1/openpi/training/rl/start`
+  - Toolkit 才能新增 `mint.openpi` RL client types
+  - cross-repo fake-runtime lane 和 localhost live-service smoke 才能扩到 RL
 
 ## Expected Outcomes
 
@@ -68,4 +74,6 @@
 ## Guidance For Later Work
 
 - 如果 `src/openpi` 还没有 RL runtime facade，就不要在 `src/mint` 或 `src/mindlab-toolkit` 侧创造表面兼容层。
+- 如果代码里只出现 `RLDS*` dataset / loader config，这仍然不构成 RL runtime owner。
 - 如果未来 RL contract 需要复用 Mint 现有 `ppo` / `importance_sampling` 术语，必须明确哪些字段是 OpenPI 语义，哪些字段只是现有 Mint trainer 的实现细节。
+- 如果后续真的新增 `/api/v1/openpi/training/rl/start`，它必须和 generic training、SFT 一样保持 route/type/result 隔离，不能回退到通用 training route 膨胀。

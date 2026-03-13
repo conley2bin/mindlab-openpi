@@ -34,6 +34,7 @@ What these gates do not cover:
 - full PyTorch backend execution
 - real checkpoint model creation / inference
 - cross-repo contract
+- any upstream-owned OpenPI RL runtime facade, rollout contract, or reward/update semantics
 ### `src/mint`
 
 ```bash
