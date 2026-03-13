@@ -50,8 +50,10 @@
   - `wandb_enabled`
   - `seed`
 - `checkpoint_base_dir`、`exp_name`、`overwrite`、`resume` 继续由 Mint bridge 持有，不下放给客户端。
+- 顶层未知请求字段与未知 `config_overrides` 字段都必须 fail-fast 返回 422，不能静默忽略。
 - 不在 v1 暴露 `model`、`data`、`weight_loader`、`optimizer`、`lr_schedule`、`freeze_filter` 这类会把 Mint 变成 OpenPI config authoring layer 的内部对象。
 - result / future payload 继续走 OpenPI route family 和 Mint generic future contract，但要能把 SFT lane 与 low-level generic training lane 区分开。
+- `mint://openpi/sft/<config>/<exp>/<step>` 是 Mint 对外暴露的 SFT alias，不要求底层持久化目录额外插入 `sft/`；artifact/archive/resume round-trip 仍必须回到 OpenPI 真实 checkpoint tree。
 - Toolkit 需要提供独立 `mint.openpi` SFT client method，而不是让用户继续手写原始 JSON。
 
 ## Expected Outcomes

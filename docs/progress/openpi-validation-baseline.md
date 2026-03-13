@@ -39,6 +39,7 @@ What these gates do not cover:
 ```bash
 cd src/mint && .venv/bin/pytest \
   tests/test_issue_136_config_file_validation.py \
+  tests/test_issue_18_checkpoint_tiering.py \
   tests/test_model_registry_env_config.py \
   tests/test_gateway_multi_target_routing.py \
   tests/test_client_compat_user_agent.py \
@@ -63,6 +64,7 @@ What these gates cover:
 - model registry env overrides
 - gateway multi-target routing behavior
 - client user-agent compatibility logic
+- checkpoint URI resolution, persistent-cache materialization and SFT alias round-trip back into the underlying OpenPI checkpoint tree
 - checkpoint archive auth and checkpoint proxy regressions around existing paths
 - detached `api_work_queue` scheduler semantics, stale dequeue wake-up on `active_job_id` change, and control-plane concurrency headroom above worker count
 - healthz and route labeling behavior
@@ -73,7 +75,7 @@ What these gates cover:
 - OpenPI response-side negotiated capability header on status and infer routes
 - OpenPI artifact resolve/archive contract and checkpoint reference restrictions
 - OpenPI generic training start async envelope, FutureStore queueing semantics and Mint-owned run/checkpoint URI mapping
-- OpenPI isolated SFT start async envelope, whitelisted `TrainConfig` override mapping and Mint-owned SFT run/checkpoint URI mapping
+- OpenPI isolated SFT start async envelope, whitelisted `TrainConfig` override mapping, fail-fast rejection of unknown top-level request fields, and Mint-owned SFT run/checkpoint URI mapping
 
 What these gates do not cover:
 

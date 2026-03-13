@@ -71,8 +71,9 @@ SFT request 采用 “config family anchor + top-level override whitelist”：
 
 - `config_name` 仍然指向 `src/openpi/src/openpi/training/config.py` 的现有 config entry
 - Mint 只对该 template 的白名单顶层字段进行显式 override
-- 任何不在白名单中的 override 都直接返回 422
+- 顶层未知请求字段和任何不在白名单中的 override 都直接返回 422
 - Mint 继续持有 `checkpoint_base_dir`、`exp_name`、`overwrite`、`resume`
+- `mint://openpi/sft/<config>/<exp>/<step>` 是 Mint-owned external alias；Mint checkpoint resolver 会把它归一化回底层 `openpi/<config>/<exp>/<step>` 持久化树，保证 artifact/archive/resume round-trip 不分叉
 - v1 不通过 HTTP 传输 `model`、`data`、`weight_loader`、`optimizer` 或 `lr_schedule` 这类复杂内部对象
 
 ### Result shape
