@@ -152,6 +152,16 @@ What this gate does not cover:
 
 ### Cross-repo remote deployment smoke
 
+Repo-owned runner:
+
+```bash
+cd src/mint && \
+  python scripts/tools/openpi_remote_smoke.py \
+    --base-url https://<deployment-host>
+```
+
+Underlying pytest lane:
+
 ```bash
 cd src/mint && \
   MINT_OPENPI_REMOTE_SMOKE=1 \
@@ -169,7 +179,11 @@ Optional env for deeper coverage:
 - `MINT_OPENPI_REMOTE_OBSERVATION_JSON`
 - `MINT_OPENPI_REMOTE_OBSERVATION_PATH`
 
-`MINT_OPENPI_REMOTE_OBSERVATION_JSON` 与 `MINT_OPENPI_REMOTE_OBSERVATION_PATH` 二选一。仓库内置 sample fixture 在 `src/mint/tests/fixtures/openpi_remote_observation.sample.json`。
+`src/mint/scripts/tools/openpi_remote_smoke.py` 默认驱动这条 lane，并把 sample fixture 模板解析成绝对路径 env。底层 pytest lane 仍然是 `tests/test_openpi_remote_deployment_smoke.py`。
+
+如果要通过 runner 触发 real-checkpoint infer lane，需要再提供 `--checkpoint-uri ... --config-name ... --observation-sample`，或者用 `--observation-json` / `--observation-path` 取代 sample 模板。
+
+`MINT_OPENPI_REMOTE_OBSERVATION_JSON` 与 `MINT_OPENPI_REMOTE_OBSERVATION_PATH` 二选一。仓库内置的是 sample fixture template：`src/mint/tests/fixtures/openpi_remote_observation.sample.json`。
 
 What this lane covers:
 
@@ -178,7 +192,7 @@ What this lane covers:
 - artifact resolve and archive download when `MINT_OPENPI_REMOTE_CHECKPOINT_URI` is provided
 - service-hosted real-checkpoint infer when `MINT_OPENPI_REMOTE_CHECKPOINT_URI`、`MINT_OPENPI_REMOTE_CONFIG_NAME` and one of `MINT_OPENPI_REMOTE_OBSERVATION_JSON` / `MINT_OPENPI_REMOTE_OBSERVATION_PATH` are provided
 - explicit failure bucket prefixes in test failures: `environment`, `deployment`, `runtime`, `service`, `sdk`
-- once `MINT_OPENPI_REMOTE_SMOKE=1`, missing or non-absolute `MINT_OPENPI_REMOTE_BASE_URL`, malformed / non-finite `MINT_OPENPI_REMOTE_TIMEOUT_S`, malformed / non-object `MINT_OPENPI_REMOTE_OBSERVATION_JSON`, malformed / missing / non-absolute `MINT_OPENPI_REMOTE_OBSERVATION_PATH`, and setting both observation envs at once are treated as `environment` failures instead of silent skips
+- once `MINT_OPENPI_REMOTE_SMOKE=1`, missing or non-absolute `MINT_OPENPI_REMOTE_BASE_URL` and malformed / non-finite `MINT_OPENPI_REMOTE_TIMEOUT_S` are treated as `environment` failures; once the real-checkpoint infer lane is selected, malformed / non-object `MINT_OPENPI_REMOTE_OBSERVATION_JSON`, malformed / missing / non-absolute `MINT_OPENPI_REMOTE_OBSERVATION_PATH`, and setting both observation envs at once are also treated as `environment` failures. If neither observation env is provided, the infer lane is skipped instead of failing
 
 What this lane does not cover:
 

@@ -29,6 +29,7 @@
 ## Deliverables
 
 - `src/mint/tests/test_openpi_remote_deployment_smoke.py`
+- `src/mint/scripts/tools/openpi_remote_smoke.py`
 - `src/mint/tests/fixtures/openpi_remote_observation.sample.json`
 - `.codex/skills/mint-dev/SKILL.md`
 - `.codex/skills/volcano-cluster/SKILL.md`
