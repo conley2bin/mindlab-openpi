@@ -109,13 +109,20 @@ Rules:
 - Write the YAML front matter before the title
 - Write 3 to 6 themed blocks
 - Keep the tone close to the previous plain-language style: direct, concrete, low abstraction
+- Prefer plain-language descriptions over internal shorthand. If a term such as `smoke`, `lane`, `contract`, `gate`, `runner`, or `capability negotiation` is not self-explanatory to a new teammate, replace it with a short concrete description instead of copying the term.
 - Do not mention commit hashes in the body
 - Do not use absolute filesystem paths
 - Prefer repo-local relative paths such as `tests/test_openpi_runtime_bridge.py`, `tinker_server/openpi/routes.py`, `src/mint/openpi/client.py`, `src/openpi/integration/runtime.py`
 - Route and API names are allowed
+- Do not lead with script names, path lists, or internal tool labels. Mention a path or test file only when it helps identify the changed capability.
 - Mention failures when verification exposed them
 - Do not create `具体变更：`、`证据：`、`验证：`、`剩余问题：` labels
 - Do not use per-theme markdown headings such as `## ...`
+- Do not make test work, script work, or target/plan/progress doc updates into standalone theme blocks unless they are themselves the main delivered capability. Fold tests and documentation into the business or system change they support.
+- Do not turn process cleanup, flow solidification, checklist setup, or routine inspection work into a report theme unless those changes directly alter user-facing or operator-facing system behavior.
+- Do not turn validation tightening, failure re-bucketing, observability cleanup, or diagnostic wording cleanup into a report theme when they only help internal troubleshooting and do not change the default product or service path.
+- Lead each theme with what changed for users, operators, or downstream developers. Mention tests and supporting docs only after the behavior or workflow change is clear.
+- Do not force file paths into every theme. Prefer test names, route names, or concrete behavior descriptions; add relative paths only when they materially reduce ambiguity.
 
 Each theme block should contain:
 - 1 opening sentence that starts with a concise summary clause and `：`, then immediately enters the concrete change
@@ -125,9 +132,10 @@ Each theme block should contain:
 
 Bad:
 - “推进主线并进一步收紧边界。”
+- “远端 OpenPI smoke 入口继续收紧。”
 
 Good:
-- “远端 smoke 入口继续收紧：`tests/test_openpi_remote_deployment_smoke.py` 现在把远端 status、artifact 和 inference smoke 收进 env-driven 路径。真实 checkpoint lane 还没有进入默认门禁。[测试截图占位：远端 smoke；运行：cd src/mint && .venv/bin/pytest tests/test_openpi_remote_deployment_smoke.py -vv -ra；结果：22 passed, 3 skipped in 0.41s]”
+- “远端服务的基础可用性检查更清楚了：远端地址、超时、观测输入和服务返回错误现在分开处理，排查时能先区分是环境配置错了，还是服务本身返回了失败。真实 checkpoint 的远端验证还没有进入默认必跑链路。[测试截图占位：远端最小可用性检查；运行：cd src/mint && .venv/bin/pytest tests/test_openpi_remote_deployment_smoke.py -vv -ra；结果：22 passed, 3 skipped in 0.41s]”
 
 ## Failure Handling
 
@@ -161,7 +169,7 @@ Before saving the file, check:
 - prose contains no code blocks
 - prose uses no per-theme `##` headings
 - adjacent theme blocks are separated by `---` with blank lines around it
-- every theme contains at least one relative path, test name, or route/API name
+- every theme contains at least one concrete anchor such as a test name, route/API name, or necessary relative path
 - no theme body mentions a commit hash
 - no theme contains `具体变更：`、`证据：`、`验证：`、`剩余问题：`
 - every verification claim is backed by a fresh command result
