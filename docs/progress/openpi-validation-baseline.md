@@ -53,7 +53,8 @@ cd src/mint && .venv/bin/pytest \
   tests/test_openpi_does_not_pollute_tinker_types.py \
   tests/test_openpi_runtime_bridge.py \
   tests/test_openpi_artifact_proxy.py \
-  tests/test_openpi_training_contract.py -q
+  tests/test_openpi_training_contract.py \
+  tests/test_openpi_sft_training_contract.py -q
 ```
 
 What these gates cover:
@@ -71,7 +72,8 @@ What these gates cover:
 - OpenPI inference runtime bridge and HTTP status mapping
 - OpenPI response-side negotiated capability header on status and infer routes
 - OpenPI artifact resolve/archive contract and checkpoint reference restrictions
-- OpenPI training start async envelope, FutureStore queueing semantics and Mint-owned run/checkpoint URI mapping
+- OpenPI generic training start async envelope, FutureStore queueing semantics and Mint-owned run/checkpoint URI mapping
+- OpenPI isolated SFT start async envelope, whitelisted `TrainConfig` override mapping and Mint-owned SFT run/checkpoint URI mapping
 
 What these gates do not cover:
 
@@ -94,7 +96,7 @@ What these gates cover:
 - current top-level namespace contract
 - current patch side effects for the Tinker-compatible layer
 - explicit `mint.openpi.*` namespace contract
-- OpenPI SDK config, distinct client identity, Mint OpenPI request envelopes, current Mint status payload decoding and future payload mapping
+- OpenPI SDK config, distinct client identity, Mint OpenPI request envelopes, current Mint status payload decoding and generic/SFT future payload mapping
 - fail-fast on mismatched negotiated capability header while keeping header-missing services compatible
 
 What these gates do not cover:
@@ -115,11 +117,11 @@ What this gate covers:
 - Mint OpenPI public status contract as consumed by Toolkit SDK
 - Toolkit SDK to Mint OpenPI service to fake OpenPI runtime closed loop
 - Toolkit SDK to Mint OpenPI artifact resolve and archive download closed loop
-- Toolkit SDK to Mint OpenPI training start and generic `retrieve_future` closed loop
+- Toolkit SDK to Mint OpenPI generic training start, isolated SFT start and generic `retrieve_future` closed loop
 - current negotiated capability match path across Mint OpenPI routes as consumed by Toolkit SDK
 - structured observation/action payload across repo boundaries
 - Mint-owned artifact resolve summary and archive transport contract
-- Mint-owned async training future pending / failure / success envelope and typed training result decode
+- Mint-owned async generic training and SFT future pending / failure / success envelope and typed result decode
 - lifecycle signal propagation via `reset_before_infer`
 
 What this gate does not cover:
@@ -141,7 +143,8 @@ What this gate covers:
 - public status and inference over actual HTTP instead of in-process ASGI transport
 - artifact resolve plus archive download over actual HTTP
 - service-hosted checkpoint reference resolution, persistent-cache materialization and local checkpoint-layout tar.gz round-trip
-- training start plus retrieve_future over actual HTTP, including background task scheduling
+- generic training start plus retrieve_future over actual HTTP, including background task scheduling
+- isolated SFT training start plus retrieve_future over actual HTTP, including background task scheduling
 - current negotiated capability match path over live HTTP for Mint OpenPI routes
 
 What this gate does not cover:
